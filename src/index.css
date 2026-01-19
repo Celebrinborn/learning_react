@@ -1,0 +1,14 @@
+/* Minimal global styles - component styles handled via makeStyles */
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Ensure box-sizing is inherited */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
