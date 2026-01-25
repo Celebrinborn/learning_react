@@ -151,9 +151,8 @@ import Box, { BoxWidth } from "../components/character_sheet/Box";
 
 const useStyles = makeStyles({
   container: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: tokens.spacingHorizontalL,
+    columnWidth: `${BoxWidth.tripleBox}px`,  // Use predefined width from dimentions.ts
+    columnGap: tokens.spacingHorizontalL,
     padding: tokens.spacingHorizontalL,
   },
 
@@ -186,29 +185,38 @@ export default function CharacterCreator() {
         {windowWidth}px
       </Badge>
 
-      {/* Example boxes - replace with real content */}
-      <Box basis={BoxWidth.smallBox} title="Ability Scores">
-        <p>
-          <strong>Strength:</strong> 16 (+3)
-        </p>
-        <p>
-          <strong>Dexterity:</strong> 12 (+1)
-        </p>
-        <p>
-          <strong>Constitution:</strong> 14 (+2)
-        </p>
-        <p>
-          <strong>Intelligence:</strong> 10 (+0)
-        </p>
-        <p>
-          <strong>Wisdom:</strong> 11 (+0)
-        </p>
-        <p>
-          <strong>Charisma:</strong> 10 (+0)
-        </p>
+      {/* Ability Scores */}
+      <Box gridRowSpan={2} title="Ability Scores">
+        <p><strong>Strength:</strong> 9 (−1)</p>
+        <p><strong>Dexterity:</strong> 13 (+1)</p>
+        <p><strong>Constitution:</strong> 14 (+2)</p>
+        <p><strong>Intelligence:</strong> 10 (+0)</p>
+        <p><strong>Wisdom:</strong> 16 (+3)</p>
+        <p><strong>Charisma:</strong> 15 (+2)</p>
       </Box>
 
-      <Box basis={BoxWidth.doubleBox} grow={2} title="Skills">
+      {/* Combat Statistics */}
+      <Box gridRowSpan={2} title="Combat Statistics">
+        <p><strong>Armor Class:</strong> 12</p>
+        <p><strong>Initiative:</strong> +1</p>
+        <p><strong>Speed:</strong> 30 ft</p>
+        <p><strong>Hit Point Max:</strong> 31</p>
+        <p><strong>Current HP:</strong> 31</p>
+        <p><strong>Temporary HP:</strong> —</p>
+      </Box>
+
+      {/* Saving Throws */}
+      <Box gridRowSpan={2} title="Saving Throws">
+        <p>Strength</p>
+        <p>Dexterity</p>
+        <p>Constitution</p>
+        <p>Intelligence</p>
+        <p><strong>Wisdom (Proficient)</strong></p>
+        <p>Charisma</p>
+      </Box>
+
+      {/* Skills */}
+      <Box gridRowSpan={4} title="Skills">
         <p>Acrobatics (Dex)</p>
         <p>Animal Handling (Wis)</p>
         <p>Arcana (Int)</p>
@@ -219,8 +227,8 @@ export default function CharacterCreator() {
         <p>Intimidation (Cha)</p>
         <p>Investigation (Int)</p>
         <p>Medicine (Wis)</p>
-        <p>Nature (Int)</p>
-        <p>Perception (Wis)</p>
+        <p><strong>Nature (Int) - Proficient</strong></p>
+        <p><strong>Perception (Wis) - Proficient</strong></p>
         <p>Performance (Cha)</p>
         <p>Persuasion (Cha)</p>
         <p>Religion (Int)</p>
@@ -229,9 +237,63 @@ export default function CharacterCreator() {
         <p>Survival (Wis)</p>
       </Box>
 
-      <Box basis={BoxWidth.tripleBox} grow={3}>
-        <h2>Equipment</h2>
-        <p>Equipment goes here</p>
+      {/* Attacks & Weapons */}
+      <Box gridRowSpan={2} title="Attacks & Weapons">
+        <p><strong>Quarterstaff:</strong> 1d6 bludgeoning (Versatile 1d8)</p>
+        <p><strong>Shortbow:</strong> 1d6 piercing (Ammunition)</p>
+      </Box>
+
+      {/* Equipment */}
+      <Box gridRowSpan={2} title="Equipment">
+        <p>Ritual spellbook</p>
+        <p>Leather armor</p>
+        <p>Explorer's pack</p>
+        <p>Yew staff</p>
+        <p>10 gp medallion</p>
+      </Box>
+
+      {/* Class & Racial Features */}
+      <Box gridRowSpan={3} title="Class & Racial Features">
+        <p><strong>Circle of the Moon</strong></p>
+        <p>- Combat Wild Shape</p>
+        <p>- Circle Forms</p>
+        <p><strong>Dragonborn Breath (Cold):</strong></p>
+        <p>15-ft cone, DC 12 Con save, 2d6 cold damage</p>
+      </Box>
+
+      {/* Feat */}
+      <Box gridRowSpan={2} title="Feat: Ritual Caster (Wizard)">
+        <p><strong>Ritual Spellbook:</strong></p>
+        <p>- Find Familiar</p>
+        <p>- Unseen Servant</p>
+      </Box>
+
+      {/* Languages & Proficiencies */}
+      <Box gridRowSpan={2} title="Languages & Proficiencies">
+        <p>Common</p>
+        <p>Draconic</p>
+        <p>Druidic</p>
+        <p>Dragon Chess</p>
+      </Box>
+
+      {/* Personality */}
+      <Box gridRowSpan={3} title="Personality Traits">
+        <p>Personality traits go here</p>
+      </Box>
+
+      {/* Ideals */}
+      <Box gridRowSpan={2} title="Ideals">
+        <p>Ideals go here</p>
+      </Box>
+
+      {/* Bonds */}
+      <Box gridRowSpan={2} title="Bonds">
+        <p>Bonds go here</p>
+      </Box>
+
+      {/* Flaws */}
+      <Box gridRowSpan={2} title="Flaws">
+        <p>Flaws go here</p>
       </Box>
     </div>
   );

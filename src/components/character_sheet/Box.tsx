@@ -14,6 +14,8 @@ export interface BoxProps {
   shrink?: number;
   /**title (default blank) */
   title?: string;
+  /** Number of grid rows to span (default: 1) */
+  gridRowSpan?: number;
 }
 
 const useStyles = makeStyles({
@@ -23,6 +25,14 @@ const useStyles = makeStyles({
     borderRadius: "4px",
     boxShadow: tokens.shadow2,
     padding: tokens.spacingHorizontalL,
+    alignSelf: "start",
+    breakInside: "avoid",  // Prevent boxes from splitting across columns
+    marginBottom: tokens.spacingVerticalL,  // Vertical spacing between boxes
+    // display: "flex",
+    // flexDirection: "column",
+    // // justifyContent: "space-between",
+    // height: "100%",
+    // // overflow: ""
 
     // Print styles
     "@media print": {
@@ -38,12 +48,14 @@ export default function Box({
   grow = 1,
   shrink = 1,
   title = "",
+  gridRowSpan = 1,
 }: BoxProps) {
   return (
     <div
       className={useStyles().box}
       style={{
         flex: `${grow} ${shrink} ${basis}px`,
+        // gridRow: `span ${gridRowSpan}`,
       }}
     >
       {children}

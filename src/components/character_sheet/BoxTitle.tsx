@@ -9,7 +9,8 @@ export interface BoxProps {
 
 const useStyles = makeStyles({
     container: {
-        
+        flexDirection: "column",
+        alignSelf: "end"
     },
     title: {
         fontSize: tokens.fontSizeBase100,
