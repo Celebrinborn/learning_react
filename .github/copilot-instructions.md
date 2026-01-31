@@ -13,4 +13,20 @@
 
 - **Test at the boundaries**: Focus on testing interfaces and public contracts, not implementation details
 - **Behavior over implementation**: Verify correct outputs and behavior, not how the code achieves it
-- **Framework**: Use pytest for all Python tests
+- **Backend Framework**: Use pytest for all Python tests
+- **Frontend Framework**: Use Vitest and React Testing Library for all React component tests
+
+## Running Tests
+
+### Backend Tests
+**Must run from `src/backend` directory with virtual environment activated:**
+```powershell
+cd 'C:\Path\To\Your\Workspace\src\backend'; .\env\Scripts\Activate.ps1; pytest
+```
+
+### Frontend Tests
+**Must run from `src/frontend` directory:**
+```powershell
+cd 'C:\Path\To\Your\Workspace\src\frontend'; npm test
+```
+*(Replace `C:\Path\To\Your\Workspace` with your actual repository path)*
