@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import EncounterBuilder from './pages/EncounterBuilder';
 import EncounterPlayer from './pages/EncounterPlayer';
+import Map from './pages/Map';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="settings" element={<Settings />} />
             <Route path="encounter_builder" element={<EncounterBuilder />} />
             <Route path="encounter_player" element={<EncounterPlayer />} />
+            <Route path="map" element={<Map />} />
             <Route path="*" element={<NotFound />} />
           </Route>
 

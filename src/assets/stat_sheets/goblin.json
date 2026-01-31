@@ -1,0 +1,138 @@
+{
+  "schema_version": "ui_tracker.monster.v4",
+
+  "entity": {
+    "name": null,
+    "picture": null
+  },
+
+  "creature": {
+    "title": "Goblin",
+    "size": "Small",
+    "type": "Humanoid",
+    "tags": ["Goblinoid"],
+    "alignment": "Neutral Evil"
+  },
+
+  "source": {
+    "system": "dnd5e",
+    "edition": "2014",
+    "cr": 0.25,
+    "xp": 50
+  },
+
+  "ac": { "value": 15 },
+
+  "hp": {
+    "average": 7,
+    "formula": { "d6": 2 },
+    "current": 7,
+    "temporary": 0
+  },
+
+  "stats": {
+    "proficiency_bonus": 2,
+    "abilities": {
+      "STR": { "score": 8, "mod": -1 },
+      "DEX": { "score": 14, "mod": 2 },
+      "CON": { "score": 10, "mod": 0 },
+      "INT": { "score": 10, "mod": 0 },
+      "WIS": { "score": 8, "mod": -1 },
+      "CHA": { "score": 8, "mod": -1 }
+    },
+    "initiative_mod": 2,
+    "skills": [{ "name": "Stealth", "mod": 6 }],
+    "senses": {
+      "darkvision_ft": 60,
+      "passive_perception": 9
+    },
+    "languages": ["Common", "Goblin"]
+  },
+
+  "movement": {
+    "walk_ft": 30,
+    "fly_ft": 0,
+    "swim_ft": 0,
+    "climb_ft": 0,
+    "burrow_ft": 0
+  },
+
+  "traits": [
+    {
+      "id": "trait.nimble_escape",
+      "name": "Nimble Escape",
+      "text": "The goblin can take the Disengage or Hide action as a bonus action on each of its turns."
+    }
+  ],
+
+  "actions": [
+    {
+      "id": "action.scimitar",
+      "name": "Scimitar",
+      "kind": "weapon_attack",
+      "ammo_type": null,
+      "to_hit": 4,
+      "reach_ft": 5,
+      "target": "one target",
+      "damage": [
+        { "dice": "1d6+2", "type": "slashing", "average": 5 }
+      ]
+    },
+    {
+      "id": "action.shortbow",
+      "name": "Shortbow",
+      "kind": "weapon_attack",
+      "ammo_type": "arrows",
+      "to_hit": 4,
+      "range_ft": { "normal": 80, "long": 320 },
+      "target": "one target",
+      "damage": [
+        { "dice": "1d6+2", "type": "piercing", "average": 5 }
+      ]
+    }
+  ],
+
+  "bonus_actions": [
+    {
+      "id": "bonus.nimble_escape",
+      "name": "Nimble Escape",
+      "kind": "special",
+      "ammo_type": null,
+      "notes": "Disengage or Hide."
+    }
+  ],
+
+  "reactions": [],
+
+  "resources": {
+    "ammo": [
+      {
+        "ammo_type": "arrows",
+        "label": "Arrows",
+        "pool_type": "discrete",
+        "max": 40,
+        "current": 40,
+        "reset": "none"
+      }
+    ]
+  },
+
+  "inventory": [
+    {
+      "id": "item.quiver_1",
+      "name": "Quiver",
+      "contains": {
+        "ammo_type": "arrows",
+        "quantity": 20
+      }
+    },
+    {
+      "id": "item.quiver_2",
+      "name": "Quiver",
+      "contains": {
+        "ammo_type": "arrows",
+        "quantity": 20
+      }
+    }
+  ]
+}

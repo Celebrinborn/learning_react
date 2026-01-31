@@ -1,0 +1,122 @@
+{
+  "entity": {
+    "name": null,
+    "mini_picture": null
+  },
+
+  "creature": {
+    "title": "Mage",
+    "size": "Medium",
+    "type": "Humanoid",
+    "tags": ["Any Race"],
+    "alignment": "Any"
+  },
+
+  "source": {
+    "system": "dnd5e",
+    "edition": "2014",
+    "cr": 6,
+    "xp": 2300
+  },
+
+  "ac": { "value": 12 },
+
+  "hp": {
+    "average": 40,
+    "formula": { "d8": 9 },
+    "current": 40,
+    "temporary": 0
+  },
+
+  "stats": {
+    "proficiency_bonus": 3,
+    "abilities": {
+      "STR": { "score": 9, "mod": -1 },
+      "DEX": { "score": 14, "mod": 2 },
+      "CON": { "score": 11, "mod": 0 },
+      "INT": { "score": 17, "mod": 3 },
+      "WIS": { "score": 12, "mod": 1 },
+      "CHA": { "score": 11, "mod": 0 }
+    },
+    "initiative_mod": 2,
+    "saving_throws": {
+      "STR": -1,
+      "DEX": 2,
+      "CON": 0,
+      "INT": 6,
+      "WIS": 4,
+      "CHA": 0
+    },
+    "skills": [
+      { "name": "Arcana", "mod": 6 },
+      { "name": "History", "mod": 6 }
+    ],
+    "senses": { "passive_perception": 11 },
+    "languages": ["Any four languages"]
+  },
+
+  "movement": {
+    "walk_ft": 30,
+    "fly_ft": 0,
+    "swim_ft": 0,
+    "climb_ft": 0,
+    "burrow_ft": 0
+  },
+
+  "spellcasting_meta": {
+    "caster_level": 9,
+    "caster_class": "Wizard",
+    "ability": "INT",
+    "spell_attack_bonus": 6,
+    "spell_save_dc": 14
+  },
+
+  "actions": [
+    {
+      "id": "action.dagger",
+      "name": "Dagger",
+      "ammo_type": null,
+      "kind": "weapon_attack",
+      "to_hit": 5,
+      "reach_ft": 5,
+      "range_ft": { "normal": 20, "long": 60 },
+      "target": "one target",
+      "damage": [{ "dice": "1d4+2", "type": "piercing", "average": 4 }]
+    },
+
+    { "id": "spell.fire_bolt", "name": "Fire Bolt", "ammo_type": null, "kind": "spell", "spell_level": 0, "casting_time": "action" },
+    { "id": "spell.light", "name": "Light", "ammo_type": null, "kind": "spell", "spell_level": 0, "casting_time": "action" },
+    { "id": "spell.mage_hand", "name": "Mage Hand", "ammo_type": null, "kind": "spell", "spell_level": 0, "casting_time": "action" },
+    { "id": "spell.prestidigitation", "name": "Prestidigitation", "ammo_type": null, "kind": "spell", "spell_level": 0, "casting_time": "action" },
+
+    { "id": "spell.detect_magic", "name": "Detect Magic", "ammo_type": "spell_slot_1", "kind": "spell", "spell_level": 1, "casting_time": "action", "concentration": true, "ritual": true },
+    { "id": "spell.mage_armor", "name": "Mage Armor", "ammo_type": "spell_slot_1", "kind": "spell", "spell_level": 1, "casting_time": "action" },
+    { "id": "spell.magic_missile", "name": "Magic Missile", "ammo_type": "spell_slot_1", "kind": "spell", "spell_level": 1, "casting_time": "action" },
+
+    { "id": "spell.suggestion", "name": "Suggestion", "ammo_type": "spell_slot_2", "kind": "spell", "spell_level": 2, "casting_time": "action", "concentration": true },
+    { "id": "spell.fireball", "name": "Fireball", "ammo_type": "spell_slot_3", "kind": "spell", "spell_level": 3, "casting_time": "action" },
+    { "id": "spell.fly", "name": "Fly", "ammo_type": "spell_slot_3", "kind": "spell", "spell_level": 3, "casting_time": "action", "concentration": true },
+    { "id": "spell.greater_invisibility", "name": "Greater Invisibility", "ammo_type": "spell_slot_4", "kind": "spell", "spell_level": 4, "casting_time": "action", "concentration": true },
+    { "id": "spell.ice_storm", "name": "Ice Storm", "ammo_type": "spell_slot_4", "kind": "spell", "spell_level": 4, "casting_time": "action" },
+    { "id": "spell.cone_of_cold", "name": "Cone of Cold", "ammo_type": "spell_slot_5", "kind": "spell", "spell_level": 5, "casting_time": "action" }
+  ],
+
+  "bonus_actions": [
+    { "id": "spell.misty_step", "name": "Misty Step", "ammo_type": "spell_slot_2", "kind": "spell", "spell_level": 2, "casting_time": "bonus_action" }
+  ],
+
+  "reactions": [
+    { "id": "spell.shield", "name": "Shield", "ammo_type": "spell_slot_1", "kind": "spell", "spell_level": 1, "casting_time": "reaction" },
+    { "id": "spell.counterspell", "name": "Counterspell", "ammo_type": "spell_slot_3", "kind": "spell", "spell_level": 3, "casting_time": "reaction" }
+  ],
+
+  "resources": {
+    "ammo": [
+      { "ammo_type": "spell_slot_1", "label": "Spell Slot (1st)", "pool_type": "discrete", "max": 4, "current": 4, "reset": "long_rest" },
+      { "ammo_type": "spell_slot_2", "label": "Spell Slot (2nd)", "pool_type": "discrete", "max": 3, "current": 3, "reset": "long_rest" },
+      { "ammo_type": "spell_slot_3", "label": "Spell Slot (3rd)", "pool_type": "discrete", "max": 3, "current": 3, "reset": "long_rest" },
+      { "ammo_type": "spell_slot_4", "label": "Spell Slot (4th)", "pool_type": "discrete", "max": 3, "current": 3, "reset": "long_rest" },
+      { "ammo_type": "spell_slot_5", "label": "Spell Slot (5th)", "pool_type": "discrete", "max": 1, "current": 1, "reset": "long_rest" }
+    ]
+  }
+}

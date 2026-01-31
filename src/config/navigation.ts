@@ -18,6 +18,7 @@ export const navigationLinks: NavLink[] = [
     children: [
       { path: '/encounter_builder', label: 'Encounter Builder' },
       { path: '/encounter_player', label: 'Encounter Player' },
+      { path: '/map', label: 'Map' },
       { path: '/settings', label: 'Settings' },
     ]
   },
