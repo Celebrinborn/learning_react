@@ -93,15 +93,18 @@ class LocalFileBlobProvider(IBlobStorage):
         
         # Collect all files recursively
         blobs = []
+        # Resolve base_path to handle Windows 8.3 short names
+        resolved_base = self.base_path.resolve()
+        
         if search_path.is_file():
             # If the prefix points to a file, return just that file
-            relative = search_path.relative_to(self.base_path)
+            relative = search_path.resolve().relative_to(resolved_base)
             blobs.append(str(relative).replace("\\", "/"))
         elif search_path.is_dir():
             # Recursively find all files
             for file_path in search_path.rglob("*"):
                 if file_path.is_file():
-                    relative = file_path.relative_to(self.base_path)
+                    relative = file_path.resolve().relative_to(resolved_base)
                     blob_path = str(relative).replace("\\", "/")
                     
                     # Only include if it matches the prefix
