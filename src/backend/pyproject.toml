@@ -23,5 +23,8 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["dnd_backend"]
 package-dir = {"dnd_backend" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false

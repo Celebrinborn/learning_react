@@ -1,8 +1,7 @@
 {
-  "python.analysis.extraPaths": [
-    "${workspaceFolder}/src/backend/src",
-    "${workspaceFolder}/",
-    "${workspaceFolder}/src"
-  ],
-  "python.defaultInterpreterPath": "${workspaceFolder}/src/backend/env/Scripts/python.exe"
+  "python.defaultInterpreterPath": "${workspaceFolder}/src/backend/env/Scripts/python.exe",
+  "python.analysis.extraPaths": ["${workspaceFolder}/src/backend"],
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.useLibraryCodeForTypes": true
 }

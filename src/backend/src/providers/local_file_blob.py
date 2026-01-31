@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import List
-from dnd_backend.interfaces.blob import IBlobStorage
+from interfaces.blob import IBlobStorage
 
 
 class LocalFileBlobProvider(IBlobStorage):

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from typing import Optional, List
 
-from dnd_backend.models.map import MapLocation, MapLocationCreate, MapLocationUpdate
-from dnd_backend.storage.map import (
+from models.map import MapLocation, MapLocationCreate, MapLocationUpdate
+from storage.map import (
     create_map_location,
     get_map_location,
     get_all_map_locations,

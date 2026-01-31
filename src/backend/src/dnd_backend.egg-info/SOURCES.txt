@@ -18,3 +18,7 @@ src/routes/map.py
 src/storage/__init__.py
 src/storage/character.py
 src/storage/map.py
+tests/test_models.py
+tests/test_providers.py
+tests/test_routes.py
+tests/test_storage.py

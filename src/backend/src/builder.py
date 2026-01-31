@@ -5,8 +5,8 @@ All other modules should depend only on interfaces.
 """
 
 from pathlib import Path
-from dnd_backend.interfaces.blob import IBlobStorage
-from dnd_backend.providers.local_file_blob import LocalFileBlobProvider
+from interfaces.blob import IBlobStorage
+from providers.local_file_blob import LocalFileBlobProvider
 
 
 class StorageBuilder:
