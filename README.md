@@ -1,4 +1,43 @@
-# React + TypeScript + Vite
+# DND Stats Sheet - React + FastAPI Application
+
+A D&D campaign management application with a React frontend and FastAPI backend.
+
+## Quick Start
+
+### Running the Servers in Dev
+
+**VSCode Tasks (Recommended)**
+1. Press `Ctrl+Shift+P`
+2. Type "Tasks: Run Task"
+3. Select "Run All (Backend + Frontend)"
+
+This opens both servers in VSCode's integrated terminal panel.
+
+### Running Servers Individually
+
+**Backend** (FastAPI on http://127.0.0.1:8000):
+```powershell
+cd src/backend
+.\env\Scripts\Activate.ps1
+python run_server.py
+```
+
+**Frontend** (Vite on http://localhost:5173):
+```powershell
+cd src/frontend
+npm run dev
+```
+
+## Project Structure
+
+- `src/backend/` - FastAPI backend with hexagonal architecture
+- `src/frontend/` - React + TypeScript + Vite frontend
+- `.vscode/tasks.json` - VSCode tasks for running servers
+- `run_all.ps1` - Script to launch both servers
+
+---
+
+## React + Vite Setup
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

@@ -16,8 +16,12 @@
 - **Backend Framework**: Use pytest for all Python tests
 - **Frontend Framework**: Use Vitest and React Testing Library for all React component tests
 
+## Running Development Servers
+
+**Prefer VSCode tasks:** Run Backend, Run Frontend, Run All (Backend + Frontend)
+
 ## Running Tests
-/
+
 ### Backend Tests
 **Must run from `src/backend` directory with virtual environment activated:**
 ```powershell
