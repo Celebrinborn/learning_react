@@ -122,15 +122,8 @@ def update_map_location(location_id: str, location_data: MapLocationUpdate) -> O
     
     # Update the ID if name changed
     existing_location.id = _sanitize_name(existing_location.name)
-    existing_location.update by ID (sanitized name)"""
-    # Try to find the location by loading all and matching ID
-    locations = _load_all_map_locations()
-    location = next((loc for loc in locations if loc.id == location_id), None)
+    existing_location.updated_at = datetime.utcnow()
     
-    if not location:
-        return False
-    
-    file_path = _get_map_location_file_path(location.name
     # Get new file path
     new_file_path = _get_map_location_file_path(existing_location.name)
     

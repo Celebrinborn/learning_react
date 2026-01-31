@@ -7,3 +7,7 @@ dnd_backend.egg-info/requires.txt
 dnd_backend.egg-info/top_level.txt
 src/builder.py
 src/main.py
+tests/test_models.py
+tests/test_providers.py
+tests/test_routes.py
+tests/test_storage.py
