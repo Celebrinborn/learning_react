@@ -2,7 +2,7 @@
 import pytest
 from pathlib import Path
 
-from dnd_backend.providers.local_file_blob import LocalFileBlobProvider
+from providers.local_file_blob import LocalFileBlobProvider
 
 
 class TestLocalFileBlobProvider:
@@ -11,7 +11,7 @@ class TestLocalFileBlobProvider:
     @pytest.fixture
     def provider(self, blob_storage_path: Path) -> LocalFileBlobProvider:
         """Create a LocalFileBlobProvider instance for testing."""
-        return LocalFileBlobProvider(str(blob_storage_path))
+        return LocalFileBlobProvider(blob_storage_path)
 
     @pytest.mark.asyncio
     async def test_write_and_read(self, provider: LocalFileBlobProvider):

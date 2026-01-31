@@ -9,36 +9,43 @@ class LocalFileBlobProvider(IBlobStorage):
     Stores blobs as files in a configured base directory.
     """
 
-    def __init__(self, base_path: str):
+    def __init__(self, base_path: Path):
         """
         Initialize the local file blob provider.
         
         Args:
             base_path: Base directory path for storing blobs
         """
-        self.base_path = Path(base_path)
+        self.base_path = base_path.resolve()
         self.base_path.mkdir(parents=True, exist_ok=True)
 
     def _resolve_path(self, path: str) -> Path:
         """
-        Resolve a relative blob path to an absolute file system path.
-        Ensures the path is within the base directory for security.
+        Resolve a blob-style relative path to an absolute file system path.
+        Only accepts relative paths without drive letters or absolute components.
         
         Args:
-            path: Relative blob path
+            path: Blob-style relative path (e.g., "characters/hero.json")
             
         Returns:
             Resolved absolute Path object
+            
+        Raises:
+            ValueError: If path is absolute, contains drive letter, or attempts traversal
         """
-        # Remove leading slashes and normalize
-        clean_path = path.lstrip("/").replace("\\", "/")
-        full_path = (self.base_path / clean_path).resolve()
+        # Convert to Path and normalize separators
+        blob_path = Path(path.replace("\\", "/"))
         
-        # Ensure the resolved path is within base_path (prevent directory traversal)
-        if not str(full_path).startswith(str(self.base_path.resolve())):
-            raise ValueError(f"Path '{path}' is outside the base directory")
+        # Reject absolute paths (drive letters, UNC paths, or paths starting with /)
+        if blob_path.is_absolute():
+            raise ValueError(f"Path must be relative, not absolute: {path}")
         
-        return full_path
+        # Reject paths that try to escape using ..
+        if ".." in blob_path.parts:
+            raise ValueError(f"Path traversal not allowed: {path}")
+        
+        # Simple join - no need for resolve() since we've validated it's safe
+        return self.base_path / blob_path
 
     async def read(self, path: str) -> bytes:
         """Read blob data from the local file system."""
@@ -92,24 +99,22 @@ class LocalFileBlobProvider(IBlobStorage):
             search_path = self.base_path
         
         # Collect all files recursively
-        blobs = []
-        # Resolve base_path to handle Windows 8.3 short names
-        resolved_base = self.base_path.resolve()
+        blobs: List[str] = []
+        prefix_path = Path(prefix.replace("\\", "/")) if prefix else Path()
         
         if search_path.is_file():
             # If the prefix points to a file, return just that file
-            relative = search_path.resolve().relative_to(resolved_base)
-            blobs.append(str(relative).replace("\\", "/"))
+            relative = search_path.relative_to(self.base_path)
+            blobs.append(relative.as_posix())
         elif search_path.is_dir():
             # Recursively find all files
             for file_path in search_path.rglob("*"):
                 if file_path.is_file():
-                    relative = file_path.resolve().relative_to(resolved_base)
-                    blob_path = str(relative).replace("\\", "/")
+                    relative = file_path.relative_to(self.base_path)
                     
                     # Only include if it matches the prefix
-                    if not prefix or blob_path.startswith(prefix.replace("\\", "/")):
-                        blobs.append(blob_path)
+                    if not prefix or relative.as_posix().startswith(prefix_path.as_posix()):
+                        blobs.append(relative.as_posix())
         
         return sorted(blobs)
 

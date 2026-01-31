@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 
-from models.map import MapLocation, MapLocationCreate, MapLocationUpdate
+from models.map import MapLocation
 
 # Get the data directory path (relative to project root)
 DATA_DIR = Path(__file__).parent.parent.parent.parent / "data" / "maps"
@@ -34,7 +34,7 @@ def _name_exists(name: str, exclude_name: Optional[str] = None) -> bool:
 
 def _load_all_map_locations() -> List[MapLocation]:
     """Load all map locations from disk"""
-    locations = []
+    locations: List[MapLocation] = []
     if not DATA_DIR.exists():
         return locations
     
@@ -48,15 +48,16 @@ def _load_all_map_locations() -> List[MapLocation]:
     
     return locations
 
-def create_map_location(location_data: MapLocationCreate) -> MapLocation:
+def create_map_location(location_data: MapLocation) -> MapLocation:
     """Create a new map location and save to disk"""
     # Check if name already exists
     if _name_exists(location_data.name):
         raise ValueError(f"A location with the name '{location_data.name}' already exists")
     
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     sanitized_id = _sanitize_name(location_data.name)
     
+    # Create location with generated id and timestamps
     location = MapLocation(
         id=sanitized_id,
         name=location_data.name,
@@ -100,7 +101,7 @@ def get_all_map_locations(map_id: Optional[str] = None) -> List[MapLocation]:
     
     return locations
 
-def update_map_location(location_id: str, location_data: MapLocationUpdate) -> Optional[MapLocation]:
+def update_map_location(location_id: str, location_data: MapLocation) -> Optional[MapLocation]:
     """Update a map location"""
     existing_location = get_map_location(location_id)
     
@@ -108,24 +109,28 @@ def update_map_location(location_id: str, location_data: MapLocationUpdate) -> O
         return None
     
     # Check if name is being changed and if new name already exists
-    update_dict = location_data.model_dump(exclude_unset=True)
-    if 'name' in update_dict and update_dict['name'] != existing_location.name:
-        if _name_exists(update_dict['name'], exclude_name=existing_location.name):
-            raise ValueError(f"A location with the name '{update_dict['name']}' already exists")
+    if location_data.name != existing_location.name:
+        if _name_exists(location_data.name, exclude_name=existing_location.name):
+            raise ValueError(f"A location with the name '{location_data.name}' already exists")
     
     # Get old file path before updating
     old_file_path = _get_map_location_file_path(existing_location.name)
     
-    # Update fields
-    for field, value in update_dict.items():
-        setattr(existing_location, field, value)
-    
-    # Update the ID if name changed
-    existing_location.id = _sanitize_name(existing_location.name)
-    existing_location.updated_at = datetime.utcnow()
+    # Update all fields from location_data
+    updated_location = MapLocation(
+        id=_sanitize_name(location_data.name),
+        name=location_data.name,
+        description=location_data.description,
+        latitude=location_data.latitude,
+        longitude=location_data.longitude,
+        map_id=location_data.map_id,
+        icon_type=location_data.icon_type,
+        created_at=existing_location.created_at,  # Keep original creation time
+        updated_at=datetime.now(timezone.utc)
+    )
     
     # Get new file path
-    new_file_path = _get_map_location_file_path(existing_location.name)
+    new_file_path = _get_map_location_file_path(updated_location.name)
     
     # If name changed, delete old file
     if old_file_path != new_file_path and old_file_path.exists():
@@ -133,9 +138,9 @@ def update_map_location(location_id: str, location_data: MapLocationUpdate) -> O
     
     # Save to disk (new path if name changed)
     with open(new_file_path, 'w') as f:
-        json.dump(existing_location.model_dump(mode='json'), f, indent=2, default=str)
+        json.dump(updated_location.model_dump(mode='json'), f, indent=2, default=str)
     
-    return existing_location
+    return updated_location
 
 def delete_map_location(location_id: str) -> bool:
     """Delete a map location"""

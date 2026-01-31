@@ -4,9 +4,9 @@ from fastapi.testclient import TestClient
 from pathlib import Path
 from unittest.mock import patch
 
-from dnd_backend.models.character import CharacterCreate, CharacterUpdate
-from dnd_backend.storage import character as storage
-from dnd_backend.routes.character import router
+from models.character import CharacterCreate, CharacterUpdate
+from storage import character as storage
+from routes.character import router
 from fastapi import FastAPI
 
 

@@ -3,7 +3,7 @@ import pytest
 from datetime import datetime
 from pydantic import ValidationError
 
-from dnd_backend.models.character import Character, CharacterCreate, CharacterUpdate
+from models.character import Character, CharacterCreate, CharacterUpdate
 
 
 class TestCharacterModels:

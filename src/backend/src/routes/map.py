@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import Optional, List
 
-from models.map import MapLocation, MapLocationCreate, MapLocationUpdate
+from models.map import MapLocation
 from storage.map import (
     create_map_location,
     get_map_location,
@@ -13,7 +13,7 @@ from storage.map import (
 router = APIRouter(prefix="/api/map-locations", tags=["Map Locations"])
 
 @router.post("", response_model=MapLocation, status_code=201)
-async def create_location(location: MapLocationCreate):
+async def create_location(location: MapLocation):
     """Create a new map location"""
     try:
         return create_map_location(location)
@@ -34,7 +34,7 @@ async def get_location(location_id: str):
     return location
 
 @router.put("/{location_id}", response_model=MapLocation)
-async def update_location(location_id: str, location_data: MapLocationUpdate):
+async def update_location(location_id: str, location_data: MapLocation):
     """Update a map location"""
     try:
         location = update_map_location(location_id, location_data)

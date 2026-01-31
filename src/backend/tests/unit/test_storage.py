@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-from dnd_backend.models.character import Character, CharacterCreate, CharacterUpdate
-from dnd_backend.storage import character as storage
+from models.character import Character, CharacterCreate, CharacterUpdate
+from storage import character as storage
 
 
 class TestCharacterStorage:
