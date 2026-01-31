@@ -17,7 +17,7 @@
 - **Frontend Framework**: Use Vitest and React Testing Library for all React component tests
 
 ## Running Tests
-
+/
 ### Backend Tests
 **Must run from `src/backend` directory with virtual environment activated:**
 ```powershell
