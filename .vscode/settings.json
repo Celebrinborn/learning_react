@@ -3,5 +3,18 @@
   "python.analysis.extraPaths": ["${workspaceFolder}/src/backend"],
   "python.analysis.autoSearchPaths": true,
   "python.analysis.diagnosticMode": "workspace",
-  "python.analysis.useLibraryCodeForTypes": true
+  "python.analysis.useLibraryCodeForTypes": true,
+  
+  // Disable Test Adapter Converter to prevent duplicate test discovery
+  "testExplorer.useNativeTesting": true,
+  
+  // Python Testing Configuration
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": [
+    "-v",
+    "--rootdir=${workspaceFolder}/src/backend"
+  ],
+  "python.testing.cwd": "${workspaceFolder}/src/backend",
+  "python.testing.autoTestDiscoverOnSaveEnabled": true
 }
