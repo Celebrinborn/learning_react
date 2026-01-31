@@ -4,25 +4,65 @@ __pycache__/
 *$py.class
 *.so
 .Python
+
+# Virtual environments
 venv/
 env/
 ENV/
+.venv/
+
+# Package build artifacts
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
 
 # Environment variables
 .env
+.env.*
+!.env.example
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*.swn
+.pytype/
+.pyright/
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
 # Testing
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
+.tox/
+.nox/
+*.cover
+*.log
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# FastAPI / Uvicorn
+*.pid
+
+# OS files
+.DS_Store
+Thumbs.db
