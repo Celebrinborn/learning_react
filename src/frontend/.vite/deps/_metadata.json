@@ -1,0 +1,61 @@
+{
+  "hash": "def21e95",
+  "configHash": "83d5c543",
+  "lockfileHash": "d6c9edf8",
+  "browserHash": "9fa90e1a",
+  "optimized": {
+    "@fluentui/react-components": {
+      "src": "../../node_modules/@fluentui/react-components/lib/index.js",
+      "file": "@fluentui_react-components.js",
+      "fileHash": "2a972772",
+      "needsInterop": false
+    },
+    "leaflet": {
+      "src": "../../node_modules/leaflet/dist/leaflet-src.js",
+      "file": "leaflet.js",
+      "fileHash": "14d63089",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "5cfb2d7f",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "0695fcd0",
+      "needsInterop": true
+    },
+    "react-leaflet": {
+      "src": "../../node_modules/react-leaflet/lib/index.js",
+      "file": "react-leaflet.js",
+      "fileHash": "0f8fb6f2",
+      "needsInterop": false
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.mjs",
+      "file": "react-router-dom.js",
+      "fileHash": "ed0fbb4f",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-6YOVXODW": {
+      "file": "chunk-6YOVXODW.js"
+    },
+    "chunk-R3E4LXVO": {
+      "file": "chunk-R3E4LXVO.js"
+    },
+    "chunk-P6RTVJOB": {
+      "file": "chunk-P6RTVJOB.js"
+    },
+    "chunk-DGCGC3HI": {
+      "file": "chunk-DGCGC3HI.js"
+    },
+    "chunk-G3PMV62Z": {
+      "file": "chunk-G3PMV62Z.js"
+    }
+  }
+}
