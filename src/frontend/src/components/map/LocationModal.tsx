@@ -10,8 +10,11 @@ import {
   Input,
   Label,
   Textarea,
+  Dropdown,
+  Option,
 } from '@fluentui/react-components';
 import type { MapLocation, MapLocationCreate, MapLocationUpdate } from '../../types/mapLocation';
+import { LocationType, LocationTypeLabels } from '../../types/locationType';
 
 interface LocationModalProps {
   open: boolean;
@@ -32,6 +35,7 @@ export default function LocationModal({
   const [description, setDescription] = useState('');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
+  const [locationType, setLocationType] = useState<LocationType>(LocationType.OTHER);
   const [saving, setSaving] = useState(false);
 
   // Initialize form when modal opens
@@ -42,11 +46,13 @@ export default function LocationModal({
         setDescription(editingLocation.description || '');
         setLatitude(editingLocation.latitude.toString());
         setLongitude(editingLocation.longitude.toString());
+        setLocationType(editingLocation.icon_type || LocationType.OTHER);
       } else if (initialCoords) {
         setName('');
         setDescription('');
         setLatitude(initialCoords[0].toFixed(6));
         setLongitude(initialCoords[1].toFixed(6));
+        setLocationType(LocationType.OTHER);
       }
     }
   }, [open, editingLocation, initialCoords]);
@@ -64,6 +70,7 @@ export default function LocationModal({
         description: description.trim() || undefined,
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude),
+        icon_type: locationType,
       };
 
       await onSave(data);
@@ -111,6 +118,23 @@ export default function LocationModal({
                 disabled={saving}
                 rows={3}
               />
+            </div>
+
+            <div>
+              <Label htmlFor="locationType">Location Type</Label>
+              <Dropdown
+                id="locationType"
+                value={LocationTypeLabels[locationType]}
+                selectedOptions={[locationType]}
+                onOptionSelect={(_, data) => setLocationType(data.optionValue as LocationType)}
+                disabled={saving}
+              >
+                {Object.entries(LocationTypeLabels).map(([value, label]) => (
+                  <Option key={value} value={value} text={label}>
+                    {label}
+                  </Option>
+                ))}
+              </Dropdown>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>

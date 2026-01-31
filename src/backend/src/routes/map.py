@@ -15,7 +15,10 @@ router = APIRouter(prefix="/api/map-locations", tags=["Map Locations"])
 @router.post("", response_model=MapLocation, status_code=201)
 async def create_location(location: MapLocationCreate):
     """Create a new map location"""
-    return create_map_location(location)
+    try:
+        return create_map_location(location)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("", response_model=List[MapLocation])
 async def list_locations(map_id: Optional[str] = None):
@@ -33,10 +36,13 @@ async def get_location(location_id: str):
 @router.put("/{location_id}", response_model=MapLocation)
 async def update_location(location_id: str, location_data: MapLocationUpdate):
     """Update a map location"""
-    location = update_map_location(location_id, location_data)
-    if not location:
-        raise HTTPException(status_code=404, detail="Map location not found")
-    return location
+    try:
+        location = update_map_location(location_id, location_data)
+        if not location:
+            raise HTTPException(status_code=404, detail="Map location not found")
+        return location
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/{location_id}")
 async def delete_location(location_id: str):

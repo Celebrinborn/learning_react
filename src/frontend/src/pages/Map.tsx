@@ -14,6 +14,8 @@ import { mapLocationService } from '../services/mapLocationService';
 import type { MapLocation, MapLocationCreate, MapLocationUpdate } from '../types/mapLocation';
 import MapInteractionHandler from '../components/map/MapInteractionHandler';
 import LocationModal from '../components/map/LocationModal';
+import { LocationTypeIcons } from '../types/locationType';
+import L from 'leaflet';
 
 const defaultIcon = new Icon({
   iconUrl: markerIcon,
@@ -24,6 +26,17 @@ const defaultIcon = new Icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
+
+// Create custom icon with emoji
+const createCustomIcon = (emoji: string) => {
+  return L.divIcon({
+    html: `<div style="font-size: 24px; text-align: center; line-height: 1;">${emoji}</div>`,
+    className: 'custom-marker-icon',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
+  });
+};
 
 export default function Map() {
   // Årdalsfjord, Vestland county, Norway
@@ -166,38 +179,44 @@ export default function Map() {
             onLocationSelect={handleLocationSelect}
           />
 
-          {locations.map((location) => (
-            <Marker
-              key={location.id}
-              position={[location.latitude, location.longitude]}
-              icon={defaultIcon}
-            >
-              <Popup>
-                <div style={{ minWidth: '200px' }}>
-                  <h3 style={{ margin: '0 0 8px 0' }}>{location.name}</h3>
-                  {location.description && (
-                    <p style={{ margin: '0 0 12px 0', fontSize: '14px' }}>{location.description}</p>
-                  )}
-                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                    <Button
-                      size="small"
-                      appearance="secondary"
-                      onClick={() => handleEditLocation(location)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size="small"
-                      appearance="secondary"
-                      onClick={() => handleDeleteLocation(location)}
-                    >
-                      Delete
-                    </Button>
+          {locations.map((location) => {
+            const icon = location.icon_type && LocationTypeIcons[location.icon_type]
+              ? createCustomIcon(LocationTypeIcons[location.icon_type])
+              : defaultIcon;
+            
+            return (
+              <Marker
+                key={location.id}
+                position={[location.latitude, location.longitude]}
+                icon={icon}
+              >
+                <Popup>
+                  <div style={{ minWidth: '200px' }}>
+                    <h3 style={{ margin: '0 0 8px 0' }}>{location.name}</h3>
+                    {location.description && (
+                      <p style={{ margin: '0 0 12px 0', fontSize: '14px' }}>{location.description}</p>
+                    )}
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <Button
+                        size="small"
+                        appearance="secondary"
+                        onClick={() => handleEditLocation(location)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="small"
+                        appearance="secondary"
+                        onClick={() => handleDeleteLocation(location)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+                </Popup>
+              </Marker>
+            );
+          })}
         </MapContainer>
       </div>
 
