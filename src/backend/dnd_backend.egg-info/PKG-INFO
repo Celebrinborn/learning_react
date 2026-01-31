@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: dnd-backend
+Version: 0.1.0
+Summary: Backend API for DND Stats Sheet application
+Requires-Python: >=3.8
+Requires-Dist: fastapi>=0.115.0
+Requires-Dist: uvicorn[standard]>=0.30.0
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: pyyaml>=6.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"

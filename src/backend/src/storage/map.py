@@ -4,7 +4,7 @@ from typing import List, Optional
 from datetime import datetime
 import uuid
 
-from models.map import MapLocation, MapLocationCreate, MapLocationUpdate
+from dnd_backend.models.map import MapLocation, MapLocationCreate, MapLocationUpdate
 
 # Get the data directory path (relative to project root)
 DATA_DIR = Path(__file__).parent.parent.parent.parent / "data" / "maps"

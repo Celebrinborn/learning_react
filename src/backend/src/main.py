@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
-from routes import map_router, character_router
+from dnd_backend.routes import map_router, character_router
 
 # Load environment variables
 load_dotenv()

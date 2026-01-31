@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 
-from models.character import Character, CharacterCreate, CharacterUpdate
-from storage.character import (
+from dnd_backend.models.character import Character, CharacterCreate, CharacterUpdate
+from dnd_backend.storage.character import (
     create_character,
     get_character,
     get_all_characters,
