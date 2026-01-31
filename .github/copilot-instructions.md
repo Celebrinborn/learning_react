@@ -32,10 +32,12 @@
   - `tests/e2e/` - End-to-end tests that test the full system
 
 ### After Code Changes
-When updating code, you must:
-1. Run relevant unit tests to verify your changes
-2. Verify code passes Pylance strict type checking with zero errors
+When updating code, you must ALWAYS complete these steps as the final verification:
+1. **Run relevant unit tests** using the `runTests` tool to verify your changes work correctly
+2. **Verify code passes Pylance strict type checking** with zero errors using the `get_errors` tool
 3. Do NOT run integration or e2e tests unless specifically requested
+
+**CRITICAL**: Running tests is MANDATORY after any code change - this is your last step before considering the task complete.
 
 ## Running Development Servers
 
