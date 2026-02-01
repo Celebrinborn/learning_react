@@ -1,0 +1,11 @@
+{
+  "id": "haden_mine",
+  "name": "Haden Mine",
+  "latitude": 61.202005,
+  "longitude": 7.913717,
+  "description": "",
+  "map_id": "default",
+  "icon_type": "mine",
+  "created_at": "2026-02-01T21:23:19.655640Z",
+  "updated_at": "2026-02-01T21:23:19.655640Z"
+}

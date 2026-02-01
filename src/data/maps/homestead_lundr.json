@@ -1,0 +1,11 @@
+{
+  "id": "homestead_lundr",
+  "name": "Homestead Lundr",
+  "latitude": 61.209295,
+  "longitude": 7.533694,
+  "description": "",
+  "map_id": "default",
+  "icon_type": "homestead",
+  "created_at": "2026-02-01T21:30:41.500274Z",
+  "updated_at": "2026-02-01T21:30:41.500274Z"
+}
