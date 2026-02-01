@@ -5,8 +5,8 @@ import { setupTelemetry } from './telemetry'
 import './index.css'
 import App from './App.tsx'
 
-// Initialize OpenTelemetry before React render
-setupTelemetry()
+// Initialize OpenTelemetry in the background (non-blocking)
+setupTelemetry().catch(console.warn)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
