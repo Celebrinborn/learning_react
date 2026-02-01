@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, LayersControl } from 'react-lea
 import 'leaflet/dist/leaflet.css';
 import { Icon } from 'leaflet';
 import { Button, Spinner } from '@fluentui/react-components';
-import { Add24Regular, Dismiss24Regular } from '@fluentui/react-icons';
+import { Add24Regular, Dismiss24Regular, Ruler24Regular } from '@fluentui/react-icons';
 
 // Fix for default marker icon in React Leaflet
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -16,6 +16,7 @@ import MapInteractionHandler from '../components/map/MapInteractionHandler';
 import LocationModal from '../components/map/LocationModal';
 import HexGridLayer from '../components/map/HexGridLayer';
 import ZoomDisplay from '../components/map/ZoomDisplay';
+import MeasureTool from '../components/map/MeasureTool';
 import { LocationTypeIcons } from '../types/locationType';
 import L from 'leaflet';
 
@@ -50,6 +51,7 @@ export default function Map() {
   const [selectedCoords, setSelectedCoords] = useState<[number, number] | null>(null);
   const [editingLocation, setEditingLocation] = useState<MapLocation | null>(null);
   const [addingMode, setAddingMode] = useState(false);
+  const [measureMode, setMeasureMode] = useState(false);
 
   // Load locations on mount
   useEffect(() => {
@@ -124,7 +126,7 @@ export default function Map() {
       {/* Side Panel with Tools */}
       <div style={{ 
         position: 'absolute', 
-        top: '80px', 
+        bottom: '40px', 
         left: '20px', 
         zIndex: 1000,
         display: 'flex',
@@ -140,8 +142,21 @@ export default function Map() {
           icon={addingMode ? <Dismiss24Regular /> : <Add24Regular />}
           onClick={handleToggleAddMode}
           title={addingMode ? 'Cancel adding' : 'Add interest point'}
+          disabled={measureMode}
         >
           {addingMode ? 'Cancel' : 'Add Point'}
+        </Button>
+        <Button
+          appearance={measureMode ? 'primary' : 'secondary'}
+          icon={<Ruler24Regular />}
+          onClick={() => {
+            setMeasureMode(!measureMode);
+            if (!measureMode) setAddingMode(false);
+          }}
+          title={measureMode ? 'Stop measuring' : 'Measure distance'}
+          disabled={addingMode}
+        >
+          {measureMode ? 'Measuring' : 'Measure'}
         </Button>
       </div>
 
@@ -185,6 +200,11 @@ export default function Map() {
           <MapInteractionHandler 
             addingMode={addingMode}
             onLocationSelect={handleLocationSelect}
+          />
+
+          <MeasureTool 
+            active={measureMode}
+            onClose={() => setMeasureMode(false)}
           />
 
           {locations.map((location) => {

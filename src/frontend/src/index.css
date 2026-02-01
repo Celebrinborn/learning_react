@@ -12,3 +12,9 @@ body {
   box-sizing: border-box;
 }
 
+/* Measure tool segment labels - override Leaflet's DivIcon clipping */
+.measure-segment-label {
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+}
