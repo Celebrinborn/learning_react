@@ -14,6 +14,7 @@ import { mapLocationService } from '../services/mapLocationService';
 import type { MapLocation, MapLocationCreate, MapLocationUpdate } from '../types/mapLocation';
 import MapInteractionHandler from '../components/map/MapInteractionHandler';
 import LocationModal from '../components/map/LocationModal';
+import HexGridLayer from '../components/map/HexGridLayer';
 import { LocationTypeIcons } from '../types/locationType';
 import L from 'leaflet';
 
@@ -171,6 +172,10 @@ export default function Map() {
                 url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                 opacity={0.5}
               />
+            </LayersControl.Overlay>
+
+            <LayersControl.Overlay name="Hex Grid">
+              <HexGridLayer />
             </LayersControl.Overlay>
           </LayersControl>
 
