@@ -84,3 +84,5 @@ npm test -- tests/e2e/
 *(Replace `C:\Path\To\Your\Workspace` with your actual repository path)*
 
 
+# Avoiding
+Do not use pwsh scripts for running tests. Use Built-In > runTests

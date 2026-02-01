@@ -4,7 +4,8 @@ from typing import List, Optional
 from datetime import datetime, timezone
 import re
 
-from models.map import MapLocation
+from models.map import MapLocation, MapLocationCreate, MapLocationUpdate
+from telemetry import get_tracer
 
 # Get the data directory path (relative to project root)
 DATA_DIR = Path(__file__).parent.parent.parent.parent / "data" / "maps"
@@ -48,110 +49,139 @@ def _load_all_map_locations() -> List[MapLocation]:
     
     return locations
 
-def create_map_location(location_data: MapLocation) -> MapLocation:
+def create_map_location(location_data: MapLocationCreate) -> MapLocation:
     """Create a new map location and save to disk"""
-    # Check if name already exists
-    if _name_exists(location_data.name):
-        raise ValueError(f"A location with the name '{location_data.name}' already exists")
-    
-    now = datetime.now(timezone.utc)
-    sanitized_id = _sanitize_name(location_data.name)
-    
-    # Create location with generated id and timestamps
-    location = MapLocation(
-        id=sanitized_id,
-        name=location_data.name,
-        description=location_data.description,
-        latitude=location_data.latitude,
-        longitude=location_data.longitude,
-        map_id=location_data.map_id,
-        icon_type=location_data.icon_type,
-        created_at=now,
-        updated_at=now
-    )
-    
-    # Save to disk
-    file_path = _get_map_location_file_path(location_data.name)
-    with open(file_path, 'w') as f:
-        json.dump(location.model_dump(mode='json'), f, indent=2, default=str)
-    
-    return location
+    tracer = get_tracer()
+    with tracer.start_as_current_span("storage.create_map_location") as span:
+        span.set_attribute("location.name", location_data.name)
+        
+        # Check if name already exists
+        if _name_exists(location_data.name):
+            raise ValueError(f"A location with the name '{location_data.name}' already exists")
+        
+        now = datetime.now(timezone.utc)
+        sanitized_id = _sanitize_name(location_data.name)
+        span.set_attribute("location.id", sanitized_id)
+        
+        # Create location with generated id and timestamps
+        location = MapLocation(
+            id=sanitized_id,
+            name=location_data.name,
+            description=location_data.description or "",
+            latitude=location_data.latitude,
+            longitude=location_data.longitude,
+            map_id=location_data.map_id or "default",
+            icon_type=location_data.icon_type or "other",
+            created_at=now,
+            updated_at=now
+        )
+        
+        # Save to disk
+        file_path = _get_map_location_file_path(location_data.name)
+        with open(file_path, 'w') as f:
+            json.dump(location.model_dump(mode='json'), f, indent=2, default=str)
+        
+        return location
 
 def get_map_location(location_id: str) -> Optional[MapLocation]:
     """Get a map location by ID"""
-    file_path = _get_map_location_file_path(location_id)
-    
-    if not file_path.exists():
-        return None
-    
-    try:
-        with open(file_path, 'r') as f:
-            data = json.load(f)
-            return MapLocation(**data)
-    except Exception as e:
-        print(f"Error loading location {location_id}: {e}")
-        return None
+    tracer = get_tracer()
+    with tracer.start_as_current_span("storage.get_map_location") as span:
+        span.set_attribute("location.id", location_id)
+        file_path = _get_map_location_file_path(location_id)
+        
+        if not file_path.exists():
+            span.set_attribute("found", False)
+            return None
+        
+        try:
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+                span.set_attribute("found", True)
+                return MapLocation(**data)
+        except Exception as e:
+            print(f"Error loading location {location_id}: {e}")
+            span.set_attribute("error", str(e))
+            return None
 
 def get_all_map_locations(map_id: Optional[str] = None) -> List[MapLocation]:
     """Get all map locations, optionally filtered by map_id"""
-    locations = _load_all_map_locations()
-    
-    if map_id:
-        locations = [loc for loc in locations if loc.map_id == map_id]
-    
-    return locations
+    tracer = get_tracer()
+    with tracer.start_as_current_span("storage.get_all_map_locations") as span:
+        if map_id:
+            span.set_attribute("filter.map_id", map_id)
+        
+        locations = _load_all_map_locations()
+        
+        if map_id:
+            locations = [loc for loc in locations if loc.map_id == map_id]
+        
+        span.set_attribute("count", len(locations))
+        return locations
 
-def update_map_location(location_id: str, location_data: MapLocation) -> Optional[MapLocation]:
+def update_map_location(location_id: str, location_data: MapLocationUpdate) -> Optional[MapLocation]:
     """Update a map location"""
-    existing_location = get_map_location(location_id)
-    
-    if not existing_location:
-        return None
-    
-    # Check if name is being changed and if new name already exists
-    if location_data.name != existing_location.name:
-        if _name_exists(location_data.name, exclude_name=existing_location.name):
-            raise ValueError(f"A location with the name '{location_data.name}' already exists")
-    
-    # Get old file path before updating
-    old_file_path = _get_map_location_file_path(existing_location.name)
-    
-    # Update all fields from location_data
-    updated_location = MapLocation(
-        id=_sanitize_name(location_data.name),
-        name=location_data.name,
-        description=location_data.description,
-        latitude=location_data.latitude,
-        longitude=location_data.longitude,
-        map_id=location_data.map_id,
-        icon_type=location_data.icon_type,
-        created_at=existing_location.created_at,  # Keep original creation time
-        updated_at=datetime.now(timezone.utc)
-    )
-    
-    # Get new file path
-    new_file_path = _get_map_location_file_path(updated_location.name)
-    
-    # If name changed, delete old file
-    if old_file_path != new_file_path and old_file_path.exists():
-        old_file_path.unlink()
-    
-    # Save to disk (new path if name changed)
-    with open(new_file_path, 'w') as f:
-        json.dump(updated_location.model_dump(mode='json'), f, indent=2, default=str)
-    
-    return updated_location
+    tracer = get_tracer()
+    with tracer.start_as_current_span("storage.update_map_location") as span:
+        span.set_attribute("location.id", location_id)
+        existing_location = get_map_location(location_id)
+        
+        if not existing_location:
+            span.set_attribute("found", False)
+            return None
+        
+        span.set_attribute("found", True)
+        # Check if name is being changed and if new name already exists
+        if location_data.name and location_data.name != existing_location.name:
+            if _name_exists(location_data.name, exclude_name=existing_location.name):
+                raise ValueError(f"A location with the name '{location_data.name}' already exists")
+        
+        # Get old file path before updating
+        old_file_path = _get_map_location_file_path(existing_location.name)
+        
+        # Update only provided fields, keep existing values for None fields
+        updated_location = MapLocation(
+            id=_sanitize_name(location_data.name if location_data.name else existing_location.name),
+            name=location_data.name if location_data.name else existing_location.name,
+            description=location_data.description if location_data.description is not None else existing_location.description,
+            latitude=location_data.latitude if location_data.latitude is not None else existing_location.latitude,
+            longitude=location_data.longitude if location_data.longitude is not None else existing_location.longitude,
+            map_id=location_data.map_id if location_data.map_id else existing_location.map_id,
+            icon_type=location_data.icon_type if location_data.icon_type else existing_location.icon_type,
+            created_at=existing_location.created_at,  # Keep original creation time
+            updated_at=datetime.now(timezone.utc)
+        )
+        
+        # Get new file path
+        new_file_path = _get_map_location_file_path(updated_location.name)
+        
+        # If name changed, delete old file
+        if old_file_path != new_file_path and old_file_path.exists():
+            old_file_path.unlink()
+        
+        # Save to disk (new path if name changed)
+        with open(new_file_path, 'w') as f:
+            json.dump(updated_location.model_dump(mode='json'), f, indent=2, default=str)
+        
+        return updated_location
 
 def delete_map_location(location_id: str) -> bool:
     """Delete a map location"""
-    file_path = _get_map_location_file_path(location_id)
-    
-    if not file_path.exists():
-        return False
-    
-    try:
-        file_path.unlink()
-        return True
-    except Exception as e:
-        print(f"Error deleting location {location_id}: {e}")
-        return False
+    tracer = get_tracer()
+    with tracer.start_as_current_span("storage.delete_map_location") as span:
+        span.set_attribute("location.id", location_id)
+        file_path = _get_map_location_file_path(location_id)
+        
+        if not file_path.exists():
+            span.set_attribute("success", False)
+            return False
+        
+        try:
+            file_path.unlink()
+            span.set_attribute("success", True)
+            return True
+        except Exception as e:
+            print(f"Error deleting location {location_id}: {e}")
+            span.set_attribute("success", False)
+            span.set_attribute("error", str(e))
+            return False

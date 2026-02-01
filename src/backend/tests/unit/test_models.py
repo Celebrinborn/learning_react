@@ -144,3 +144,83 @@ class TestCharacterModels:
 
         assert char.stats == custom_stats
         assert char.stats["nested"]["data"] == 123
+
+
+class TestMapLocationModels:
+    """Tests for MapLocation model."""
+
+    def test_map_location_minimal_required_fields(self):
+        """Test creating a map location with only required fields (name, lat, lon)."""
+        from models.map import MapLocation
+        from datetime import datetime, timezone
+
+        now = datetime.now(timezone.utc)
+        location = MapLocation(
+            id="test-id",
+            name="Test Village",
+            latitude=61.238051,
+            longitude=7.712204,
+            created_at=now,
+            updated_at=now
+        )
+
+        assert location.id == "test-id"
+        assert location.name == "Test Village"
+        assert location.latitude == 61.238051
+        assert location.longitude == 7.712204
+        assert location.created_at == now
+        assert location.updated_at == now
+
+    def test_map_location_with_all_fields(self):
+        """Test creating a map location with all fields populated."""
+        from models.map import MapLocation
+        from datetime import datetime, timezone
+
+        now = datetime.now(timezone.utc)
+        location = MapLocation(
+            id="test-id",
+            name="Haden Village",
+            description="A small village in the mountains",
+            latitude=61.238051,
+            longitude=7.712204,
+            map_id="main-map",
+            icon_type="village",
+            created_at=now,
+            updated_at=now
+        )
+
+        assert location.name == "Haden Village"
+        assert location.description == "A small village in the mountains"
+        assert location.map_id == "main-map"
+        assert location.icon_type == "village"
+
+    def test_map_location_validation_missing_name(self):
+        """Test that creating a location without name raises ValidationError."""
+        from models.map import MapLocation
+        from pydantic import ValidationError
+        from datetime import datetime, timezone
+
+        now = datetime.now(timezone.utc)
+        with pytest.raises(ValidationError):
+            MapLocation(
+                id="test-id",
+                latitude=61.0,
+                longitude=7.0,
+                created_at=now,
+                updated_at=now
+            )
+
+    def test_map_location_validation_missing_coordinates(self):
+        """Test that creating a location without coordinates raises ValidationError."""
+        from models.map import MapLocation
+        from pydantic import ValidationError
+        from datetime import datetime, timezone
+
+        now = datetime.now(timezone.utc)
+        with pytest.raises(ValidationError):
+            MapLocation(
+                id="test-id",
+                name="Test",
+                created_at=now,
+                updated_at=now
+            )

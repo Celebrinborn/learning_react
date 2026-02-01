@@ -5,6 +5,12 @@ python-dotenv~=1.0
 pydantic~=2.9
 python-multipart~=0.0.12
 
+# OpenTelemetry dependencies
+opentelemetry-api~=1.29
+opentelemetry-sdk~=1.29
+opentelemetry-instrumentation-fastapi~=0.50b0
+opentelemetry-exporter-otlp-proto-grpc~=1.29
+
 # Testing dependencies
 pytest~=9.0
 pytest-asyncio~=1.3

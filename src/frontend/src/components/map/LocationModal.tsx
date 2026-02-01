@@ -67,9 +67,10 @@ export default function LocationModal({
     try {
       const data: MapLocationCreate | MapLocationUpdate = {
         name: name.trim(),
-        description: description.trim() || undefined,
+        description: description.trim() || '',
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude),
+        map_id: 'default',
         icon_type: locationType,
       };
 

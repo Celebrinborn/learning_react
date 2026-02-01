@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
+from opentelemetry import trace
 
 from models.character import Character, CharacterCreate, CharacterUpdate
 from storage.character import (
@@ -9,39 +10,57 @@ from storage.character import (
     update_character,
     delete_character,
 )
+from telemetry import get_tracer
 
 router = APIRouter(prefix="/api/characters", tags=["Characters"])
 
 @router.post("", response_model=Character, status_code=201)
 async def create_new_character(character: CharacterCreate):
     """Create a new character"""
-    return create_character(character)
+    tracer = get_tracer()
+    with tracer.start_as_current_span("create_character_handler") as span:
+        span.set_attribute("character.name", character.name)
+        return create_character(character)
 
 @router.get("", response_model=List[Character])
 async def list_characters():
     """Get all characters"""
-    return get_all_characters()
+    tracer = get_tracer()
+    with tracer.start_as_current_span("list_characters_handler"):
+        return get_all_characters()
 
 @router.get("/{character_id}", response_model=Character)
 async def get_character_by_id(character_id: str):
     """Get a specific character by ID"""
-    character = get_character(character_id)
-    if not character:
-        raise HTTPException(status_code=404, detail="Character not found")
-    return character
+    tracer = get_tracer()
+    with tracer.start_as_current_span("get_character_handler") as span:
+        span.set_attribute("character.id", character_id)
+        character = get_character(character_id)
+        if not character:
+            span.set_status(trace.Status(trace.StatusCode.ERROR, "Character not found"))
+            raise HTTPException(status_code=404, detail="Character not found")
+        return character
 
 @router.put("/{character_id}", response_model=Character)
 async def update_character_by_id(character_id: str, character_data: CharacterUpdate):
     """Update a character"""
-    character = update_character(character_id, character_data)
-    if not character:
-        raise HTTPException(status_code=404, detail="Character not found")
-    return character
+    tracer = get_tracer()
+    with tracer.start_as_current_span("update_character_handler") as span:
+        span.set_attribute("character.id", character_id)
+        character = update_character(character_id, character_data)
+        if not character:
+            span.set_status(trace.Status(trace.StatusCode.ERROR, "Character not found"))
+            raise HTTPException(status_code=404, detail="Character not found")
+        return character
 
 @router.delete("/{character_id}")
 async def delete_character_by_id(character_id: str):
     """Delete a character"""
-    success = delete_character(character_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Character not found")
-    return {"message": "Character deleted successfully"}
+    tracer = get_tracer()
+    with tracer.start_as_current_span("delete_character_handler") as span:
+        span.set_attribute("character.id", character_id)
+        success = delete_character(character_id)
+        if not success:
+            span.set_status(trace.Status(trace.StatusCode.ERROR, "Character not found"))
+            raise HTTPException(status_code=404, detail="Character not found")
+        return {"message": "Character deleted successfully"}

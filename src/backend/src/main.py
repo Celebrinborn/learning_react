@@ -4,9 +4,14 @@ from dotenv import load_dotenv
 import os
 
 from routes import map_router, character_router
+from telemetry import setup_telemetry
+from telemetry.config import instrument_fastapi
 
 # Load environment variables
 load_dotenv()
+
+# Initialize OpenTelemetry
+setup_telemetry()
 
 # API Tags for documentation grouping
 tags_metadata = [
@@ -41,6 +46,9 @@ app.add_middleware(
 # Include routers
 app.include_router(map_router)
 app.include_router(character_router)
+
+# Instrument FastAPI with OpenTelemetry
+instrument_fastapi(app)
 
 @app.get("/")
 async def root():
