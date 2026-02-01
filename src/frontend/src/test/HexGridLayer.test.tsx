@@ -36,6 +36,15 @@ vi.mock('react-leaflet', () => ({
       {children}
     </div>
   )),
+  Marker: vi.fn(({ position, icon }: { position: unknown; icon: L.DivIcon }) => {
+    // Extract HTML from Leaflet DivIcon
+    const html = icon?.options?.html || '';
+    return (
+      <div data-testid="hex-label-marker" data-position={JSON.stringify(position)}>
+        <div dangerouslySetInnerHTML={{ __html: html as string }} />
+      </div>
+    );
+  }),
   SVGOverlay: vi.fn(({ children, bounds }: { children?: React.ReactNode; bounds: unknown }) => (
     <div data-testid="svg-overlay" data-bounds={JSON.stringify(bounds)}>
       {children}
@@ -45,6 +54,18 @@ vi.mock('react-leaflet', () => ({
     <div data-testid="layer-group">{children}</div>
   )),
 }));
+
+// Mock Leaflet's divIcon
+vi.mock('leaflet', async (importOriginal) => {
+  const L = await importOriginal<typeof import('leaflet')>();
+  return {
+    ...L,
+    divIcon: vi.fn((options: L.DivIconOptions) => ({
+      options,
+    })),
+    latLng: vi.fn((lat: number, lng: number) => ({ lat, lng })),
+  };
+});
 
 describe('HexGridLayer', () => {
   it('renders without crashing', () => {
@@ -81,42 +102,46 @@ describe('HexGridLayer', () => {
     // Look for text elements with coordinate format "q, r, s"
     // The label should contain comma-separated numbers
     const textContent = container.textContent || '';
-    expect(textContent).toMatch(/\d+,\s*-?\d+,\s*-?\d+/);
+    expect(textContent).toMatch(/-?\d+,\s*-?\d+,\s*-?\d+/);
   });
 
-  it('positions labels at bottom-right of hex', () => {
-    const { container } = render(<HexGridLayer />);
+  it('renders label markers for each hex', () => {
+    const { getAllByTestId } = render(<HexGridLayer />);
     
-    // Check for SVG elements containing text labels
-    // Labels are rendered as SVG text inside the hex polygons
-    const svgElements = container.querySelectorAll('svg');
-    expect(svgElements.length).toBeGreaterThan(0);
+    // Check for label markers (rendered as Marker components with DivIcons)
+    const labelMarkers = getAllByTestId('hex-label-marker');
+    expect(labelMarkers.length).toBeGreaterThan(0);
   });
 
   describe('label styling', () => {
-    it('renders labels with white fill and black stroke', () => {
-      const { container } = render(<HexGridLayer />);
+    it('renders labels with white text and black text-shadow', () => {
+      const { getAllByTestId } = render(<HexGridLayer />);
       
-      // Look for text elements with the expected styling
-      const textElements = container.querySelectorAll('text');
-      if (textElements.length > 0) {
-        const style = textElements[0].getAttribute('style') || '';
-        // Should have white fill
-        expect(style).toContain('fill');
-        // Should have black stroke/outline
-        expect(style).toContain('stroke');
-      }
+      // Labels are rendered as span elements inside Marker DivIcons
+      const labelMarkers = getAllByTestId('hex-label-marker');
+      expect(labelMarkers.length).toBeGreaterThan(0);
+      
+      const firstLabel = labelMarkers[0];
+      const span = firstLabel.querySelector('span');
+      expect(span).toBeTruthy();
+      
+      const style = span?.getAttribute('style') || '';
+      // Should have white color
+      expect(style).toContain('color: white');
+      // Should have text-shadow for outline effect
+      expect(style).toContain('text-shadow');
     });
 
     it('uses small font size for labels', () => {
-      const { container } = render(<HexGridLayer />);
+      const { getAllByTestId } = render(<HexGridLayer />);
       
-      const textElements = container.querySelectorAll('text');
-      if (textElements.length > 0) {
-        const style = textElements[0].getAttribute('style') || '';
-        // Font size should be specified and small
-        expect(style).toContain('font-size');
-      }
+      const labelMarkers = getAllByTestId('hex-label-marker');
+      const firstLabel = labelMarkers[0];
+      const span = firstLabel.querySelector('span');
+      
+      const style = span?.getAttribute('style') || '';
+      // Font size should be specified and small
+      expect(style).toContain('font-size: 9px');
     });
   });
 

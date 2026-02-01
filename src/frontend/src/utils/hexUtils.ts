@@ -177,3 +177,63 @@ export function getHexId(hex: HexCoordinate, layerId: number = 0): string {
 export function getHexLabel(hex: HexCoordinate): string {
   return `${hex.q}, ${hex.r}, ${hex.s}`;
 }
+
+// ============================================================================
+// Geographic Coordinate Conversion
+// ============================================================================
+
+/** Meters per degree of latitude (approximately constant) */
+export const METERS_PER_DEGREE_LAT = 111320;
+
+/** Meters per degree of longitude at the origin latitude */
+export const METERS_PER_DEGREE_LNG = METERS_PER_DEGREE_LAT * Math.cos(ORIGIN_LAT * Math.PI / 180);
+
+/**
+ * Converts a point in meters (relative to origin) to geographic coordinates.
+ * 
+ * Uses equirectangular projection scaled for the origin latitude.
+ * This is accurate for local areas and avoids zoom-dependent pixel issues.
+ * 
+ * IMPORTANT: This function uses a fixed scale factor based on ORIGIN_LAT.
+ * Do NOT use Leaflet's project/unproject for hex math - those are 
+ * zoom-dependent pixel coordinates, not meters.
+ */
+export function metersToLatLng(point: { x: number; y: number }): { lat: number; lng: number } {
+  const lat = ORIGIN_LAT + (point.y / METERS_PER_DEGREE_LAT);
+  const lng = ORIGIN_LNG + (point.x / METERS_PER_DEGREE_LNG);
+  
+  return { lat, lng };
+}
+
+/**
+ * Converts geographic coordinates to meters relative to origin.
+ * 
+ * Uses equirectangular projection scaled for the origin latitude.
+ * This is the inverse of metersToLatLng.
+ */
+export function latLngToMeters(latlng: { lat: number; lng: number }): { x: number; y: number } {
+  return {
+    x: (latlng.lng - ORIGIN_LNG) * METERS_PER_DEGREE_LNG,
+    y: (latlng.lat - ORIGIN_LAT) * METERS_PER_DEGREE_LAT,
+  };
+}
+
+/**
+ * Converts a hex coordinate directly to geographic coordinates.
+ * 
+ * This is a convenience function that combines hexToPixel and metersToLatLng.
+ */
+export function hexToLatLng(hex: HexCoordinate): { lat: number; lng: number } {
+  const meters = hexToPixel(hex);
+  return metersToLatLng(meters);
+}
+
+/**
+ * Converts geographic coordinates to the nearest hex coordinate.
+ * 
+ * This is a convenience function that combines latLngToMeters and pixelToHex.
+ */
+export function latLngToHex(latlng: { lat: number; lng: number }): HexCoordinate {
+  const meters = latLngToMeters(latlng);
+  return pixelToHex(meters.x, meters.y);
+}

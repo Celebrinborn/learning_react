@@ -15,6 +15,7 @@ import type { MapLocation, MapLocationCreate, MapLocationUpdate } from '../types
 import MapInteractionHandler from '../components/map/MapInteractionHandler';
 import LocationModal from '../components/map/LocationModal';
 import HexGridLayer from '../components/map/HexGridLayer';
+import ZoomDisplay from '../components/map/ZoomDisplay';
 import { LocationTypeIcons } from '../types/locationType';
 import L from 'leaflet';
 
@@ -166,18 +167,20 @@ export default function Map() {
               />
             </LayersControl.BaseLayer>
 
-            <LayersControl.Overlay name="Land Cover (Biomes)">
+            <LayersControl.Overlay checked name="Satellite Imagery">
               <TileLayer
-                attribution='ESRI World Land Cover'
+                attribution='ESRI World Imagery'
                 url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                 opacity={0.5}
               />
             </LayersControl.Overlay>
 
-            <LayersControl.Overlay name="Hex Grid">
+            <LayersControl.Overlay checked name="Hex Grid">
               <HexGridLayer />
             </LayersControl.Overlay>
           </LayersControl>
+
+          <ZoomDisplay />
 
           <MapInteractionHandler 
             addingMode={addingMode}

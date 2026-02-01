@@ -14,6 +14,12 @@ import {
   HEX_SIZE_M,
   ORIGIN_LAT,
   ORIGIN_LNG,
+  metersToLatLng,
+  latLngToMeters,
+  hexToLatLng,
+  latLngToHex,
+  METERS_PER_DEGREE_LAT,
+  METERS_PER_DEGREE_LNG,
 } from '../utils/hexUtils';
 
 describe('hexUtils', () => {
@@ -225,6 +231,112 @@ describe('hexUtils', () => {
         const dy = corner.y - center.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         expect(distance).toBeCloseTo(HEX_SIZE_M, 3);
+      });
+    });
+  });
+
+  describe('geographic coordinate conversion', () => {
+    describe('metersToLatLng and latLngToMeters', () => {
+      it('returns origin coordinates for (0, 0) meters', () => {
+        const result = metersToLatLng({ x: 0, y: 0 });
+        expect(result.lat).toBeCloseTo(ORIGIN_LAT, 6);
+        expect(result.lng).toBeCloseTo(ORIGIN_LNG, 6);
+      });
+
+      it('round-trips correctly for various meter offsets', () => {
+        const testPoints = [
+          { x: 0, y: 0 },
+          { x: 1000, y: 0 },
+          { x: 0, y: 1000 },
+          { x: -5000, y: 3000 },
+          { x: 10000, y: -10000 },
+        ];
+
+        for (const original of testPoints) {
+          const latlng = metersToLatLng(original);
+          const roundTrip = latLngToMeters(latlng);
+          
+          expect(roundTrip.x).toBeCloseTo(original.x, 3);
+          expect(roundTrip.y).toBeCloseTo(original.y, 3);
+        }
+      });
+
+      it('accounts for latitude-dependent longitude scaling', () => {
+        // At ~61°N, longitude degrees are compressed by cos(61°) ≈ 0.485
+        // Moving 1000m east should result in a larger lng change than at equator
+        const point = metersToLatLng({ x: 1000, y: 0 });
+        const lngDelta = point.lng - ORIGIN_LNG;
+        
+        // At equator, 1000m ≈ 0.009° longitude
+        // At 61°N, 1000m ≈ 0.009° / cos(61°) ≈ 0.0185° longitude
+        expect(lngDelta).toBeGreaterThan(0.015);
+        expect(lngDelta).toBeLessThan(0.020);
+      });
+
+      it('uses consistent scale factors (not zoom-dependent)', () => {
+        // This test ensures we're using fixed meter-to-degree conversion
+        // NOT Leaflet's zoom-dependent project/unproject
+        expect(METERS_PER_DEGREE_LAT).toBeCloseTo(111320, 0);
+        expect(METERS_PER_DEGREE_LNG).toBeCloseTo(111320 * Math.cos(ORIGIN_LAT * Math.PI / 180), 0);
+      });
+    });
+
+    describe('hexToLatLng and latLngToHex', () => {
+      it('places hex (0,0,0) at origin coordinates', () => {
+        const result = hexToLatLng({ q: 0, r: 0, s: 0 });
+        expect(result.lat).toBeCloseTo(ORIGIN_LAT, 6);
+        expect(result.lng).toBeCloseTo(ORIGIN_LNG, 6);
+      });
+
+      it('round-trips hex coordinates through geographic conversion', () => {
+        const testHexes: HexCoordinate[] = [
+          { q: 0, r: 0, s: 0 },
+          { q: 1, r: 0, s: -1 },
+          { q: 5, r: -3, s: -2 },
+          { q: -10, r: 5, s: 5 },
+          { q: 33, r: -17, s: -16 },  // ~100 miles from origin
+        ];
+
+        for (const original of testHexes) {
+          const latlng = hexToLatLng(original);
+          const roundTrip = latLngToHex(latlng);
+          
+          expect(roundTrip.q).toBe(original.q);
+          expect(roundTrip.r).toBe(original.r);
+          expect(roundTrip.s).toBe(original.s);
+        }
+      });
+
+      it('places adjacent hexes at correct geographic distance', () => {
+        // Adjacent hexes should be ~3 miles (4828m) apart
+        const origin = hexToLatLng({ q: 0, r: 0, s: 0 });
+        const eastNeighbor = hexToLatLng({ q: 1, r: 0, s: -1 });
+        
+        // Calculate approximate distance using equirectangular approximation
+        const dLat = (eastNeighbor.lat - origin.lat) * METERS_PER_DEGREE_LAT;
+        const dLng = (eastNeighbor.lng - origin.lng) * METERS_PER_DEGREE_LNG;
+        const distance = Math.sqrt(dLat * dLat + dLng * dLng);
+        
+        // Should be approximately sqrt(3) * HEX_SIZE_M (center-to-center for pointy-top)
+        const expectedDistance = Math.sqrt(3) * HEX_SIZE_M;
+        expect(distance).toBeCloseTo(expectedDistance, 0);
+      });
+
+      it('works correctly at 100 miles from origin', () => {
+        // This is the critical test - ensures geographic conversion works at distance
+        const distantHex: HexCoordinate = { q: 33, r: 0, s: -33 };
+        const latlng = hexToLatLng(distantHex);
+        
+        // Should be east of origin (higher longitude)
+        expect(latlng.lng).toBeGreaterThan(ORIGIN_LNG);
+        // Should be at same latitude (no north/south movement)
+        expect(latlng.lat).toBeCloseTo(ORIGIN_LAT, 3);
+        
+        // Convert back and verify
+        const roundTrip = latLngToHex(latlng);
+        expect(roundTrip.q).toBe(distantHex.q);
+        expect(roundTrip.r).toBe(distantHex.r);
+        expect(roundTrip.s).toBe(distantHex.s);
       });
     });
   });

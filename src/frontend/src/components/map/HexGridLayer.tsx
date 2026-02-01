@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useState, useMemo } from 'react';
-import { useMap, Polygon, LayerGroup } from 'react-leaflet';
+import { useMap, Polygon, LayerGroup, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import type { HexCoordinate } from '../../utils/hexUtils';
 import {
@@ -17,8 +17,8 @@ import {
   pixelToHex,
   getHexCorners,
   getHexLabel,
-  ORIGIN_LAT,
-  ORIGIN_LNG,
+  metersToLatLng,
+  latLngToMeters,
   HEX_SIZE_M,
 } from '../../utils/hexUtils';
 
@@ -40,34 +40,9 @@ interface HexRenderData {
   label: string;
 }
 
-/**
- * Converts a pixel point (relative to origin) to LatLng using the map's projection.
- */
-function pixelToLatLng(map: L.Map, originProjected: L.Point, point: { x: number; y: number }): L.LatLng {
-  // Add offset to origin projected point
-  // Note: In Leaflet's projected space, y increases downward, but our hex math uses
-  // standard math coordinates where y increases upward. We need to invert y.
-  const projected = L.point(
-    originProjected.x + point.x,
-    originProjected.y - point.y  // Invert y for Leaflet's coordinate system
-  );
-  return map.unproject(projected, map.getZoom());
-}
-
-/**
- * Converts a LatLng to pixel point relative to origin.
- */
-function latLngToPixel(map: L.Map, originProjected: L.Point, latlng: L.LatLng): { x: number; y: number } {
-  const projected = map.project(latlng, map.getZoom());
-  return {
-    x: projected.x - originProjected.x,
-    y: -(projected.y - originProjected.y),  // Invert y back to math coordinates
-  };
-}
-
 export default function HexGridLayer({
   minZoom = 10,
-  showLabelsAtZoom = 13,
+  showLabelsAtZoom = 10,
   strokeColor = '#666666',
   strokeWeight = 1,
 }: HexGridLayerProps) {
@@ -100,16 +75,13 @@ export default function HexGridLayer({
       return [];
     }
 
-    const origin = L.latLng(ORIGIN_LAT, ORIGIN_LNG);
-    const originProjected = map.project(origin, zoom);
+    // Convert viewport corners to meter coordinates relative to origin
+    const nw = latLngToMeters({ lat: bounds.getNorth(), lng: bounds.getWest() });
+    const ne = latLngToMeters({ lat: bounds.getNorth(), lng: bounds.getEast() });
+    const sw = latLngToMeters({ lat: bounds.getSouth(), lng: bounds.getWest() });
+    const se = latLngToMeters({ lat: bounds.getSouth(), lng: bounds.getEast() });
 
-    // Convert viewport corners to pixel coordinates relative to origin
-    const nw = latLngToPixel(map, originProjected, L.latLng(bounds.getNorth(), bounds.getWest()));
-    const ne = latLngToPixel(map, originProjected, L.latLng(bounds.getNorth(), bounds.getEast()));
-    const sw = latLngToPixel(map, originProjected, L.latLng(bounds.getSouth(), bounds.getWest()));
-    const se = latLngToPixel(map, originProjected, L.latLng(bounds.getSouth(), bounds.getEast()));
-
-    // Find pixel bounds
+    // Find meter bounds
     const minX = Math.min(nw.x, ne.x, sw.x, se.x);
     const maxX = Math.max(nw.x, ne.x, sw.x, se.x);
     const minY = Math.min(nw.y, ne.y, sw.y, se.y);
@@ -136,9 +108,10 @@ export default function HexGridLayer({
 
         // Get corners in pixel coordinates and convert to LatLng
         const pixelCorners = getHexCorners(hex);
-        const corners = pixelCorners.map((corner) =>
-          pixelToLatLng(map, originProjected, corner)
-        );
+        const corners = pixelCorners.map((corner) => {
+          const geo = metersToLatLng(corner);
+          return L.latLng(geo.lat, geo.lng);
+        });
 
         // Position label at bottom-right inside the hex
         // Bottom-right is roughly at corner 5 direction but inside
@@ -147,7 +120,8 @@ export default function HexGridLayer({
           x: center.x + HEX_SIZE_M * 0.4,
           y: center.y - HEX_SIZE_M * 0.6,
         };
-        const labelPosition = pixelToLatLng(map, originProjected, labelOffset);
+        const labelGeo = metersToLatLng(labelOffset);
+        const labelPosition = L.latLng(labelGeo.lat, labelGeo.lng);
 
         result.push({
           hex,
@@ -159,7 +133,7 @@ export default function HexGridLayer({
     }
 
     return result;
-  }, [map, zoom, bounds, minZoom]);
+  }, [zoom, bounds, minZoom]);
 
   // Don't render if below minimum zoom
   if (zoom < minZoom) {
@@ -172,7 +146,7 @@ export default function HexGridLayer({
     <LayerGroup>
       {hexes.map((hexData) => (
         <Polygon
-          key={`${hexData.hex.q},${hexData.hex.r},${hexData.hex.s}`}
+          key={`hex-${hexData.hex.q},${hexData.hex.r},${hexData.hex.s}`}
           positions={hexData.corners}
           pathOptions={{
             stroke: true,
@@ -180,59 +154,40 @@ export default function HexGridLayer({
             weight: strokeWeight,
             fill: false,
           }}
-        >
-          {showLabels && (
-            <HexLabel position={hexData.labelPosition} label={hexData.label} />
-          )}
-        </Polygon>
+        />
+      ))}
+      {showLabels && hexes.map((hexData) => (
+        <Marker
+          key={`label-${hexData.hex.q},${hexData.hex.r},${hexData.hex.s}`}
+          position={hexData.labelPosition}
+          icon={createLabelIcon(hexData.label)}
+          interactive={false}
+        />
       ))}
     </LayerGroup>
   );
 }
 
 /**
- * SVG-based label component for hex coordinates.
- * Renders white text with black outline for visibility on any background.
+ * Creates a DivIcon for hex coordinate labels.
+ * White text with black outline for visibility on any background.
  */
-interface HexLabelProps {
-  position: L.LatLng;
-  label: string;
-}
-
-function HexLabel({ position, label }: HexLabelProps) {
-  const map = useMap();
-  
-  // Convert position to pixel coordinates for the SVG overlay
-  const point = map.latLngToContainerPoint(position);
-  
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: point.x,
-        top: point.y,
-        transform: 'translate(-50%, -50%)',
-        pointerEvents: 'none',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      <svg width="60" height="16" style={{ overflow: 'visible' }}>
-        <text
-          x="30"
-          y="12"
-          textAnchor="middle"
-          style={{
-            fontSize: '10px',
-            fontFamily: 'monospace',
-            fill: 'white',
-            stroke: 'black',
-            strokeWidth: '2px',
-            paintOrder: 'stroke fill',
-          }}
-        >
-          {label}
-        </text>
-      </svg>
-    </div>
-  );
+function createLabelIcon(label: string): L.DivIcon {
+  return L.divIcon({
+    className: 'hex-label',
+    html: `<span style="
+      font-size: 9px;
+      font-family: monospace;
+      color: white;
+      text-shadow: 
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000;
+      white-space: nowrap;
+      pointer-events: none;
+    ">${label}</span>`,
+    iconSize: [50, 12],
+    iconAnchor: [25, 6],
+  });
 }
