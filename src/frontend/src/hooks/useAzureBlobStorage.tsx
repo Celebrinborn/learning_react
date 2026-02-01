@@ -4,7 +4,7 @@ import {
   BlobStorageConfig,
   UploadOptions,
   DownloadResult,
-} from '../providers/localBlobStorage';
+} from '../services/localBlobStorage';
 
 interface AzureBlobStorageContextType {
   isInitialized: boolean;
