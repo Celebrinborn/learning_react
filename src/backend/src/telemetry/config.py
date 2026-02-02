@@ -3,6 +3,7 @@ OpenTelemetry configuration for distributed tracing.
 Configures OTLP exporter to localhost:4317 (no-op until collector is running).
 """
 import os
+import logging
 from typing import Any
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -12,7 +13,9 @@ from opentelemetry.sdk.resources import Resource, SERVICE_NAME, SERVICE_VERSION
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor  # type: ignore[import-untyped]
 
 
+logger = logging.getLogger(__name__)
 _tracer: trace.Tracer | None = None
+_telemetry_enabled: bool = False
 
 
 def setup_telemetry(service_name: str = "dnd-backend") -> None:
@@ -20,12 +23,20 @@ def setup_telemetry(service_name: str = "dnd-backend") -> None:
     Initialize OpenTelemetry tracer provider and instrumentation.
     
     Configures OTLP exporter to send traces to localhost:4317.
-    Will silently fail (no-op) if no collector is running.
+    Will skip setup entirely if TELEMETRY_ENABLED is false.
     
     Args:
         service_name: Name of the service for trace identification
     """
-    global _tracer
+    global _tracer, _telemetry_enabled
+    
+    # Check if telemetry is enabled
+    telemetry_enabled_str = os.getenv("TELEMETRY_ENABLED", "false").lower()
+    _telemetry_enabled = telemetry_enabled_str in ("true", "1", "yes")
+    
+    if not _telemetry_enabled:
+        logger.info("Telemetry disabled via TELEMETRY_ENABLED=false")
+        return
     
     # Get version from environment or default
     version = os.getenv("SERVICE_VERSION", "0.1.0")
@@ -57,6 +68,7 @@ def setup_telemetry(service_name: str = "dnd-backend") -> None:
     # Initialize tracer
     _tracer = trace.get_tracer(__name__)
     
+    logger.info(f"Telemetry initialized for {service_name} v{version} ({environment})")
     # FastAPI auto-instrumentation will be done after app creation
     
 
@@ -64,10 +76,13 @@ def instrument_fastapi(app: Any) -> None:
     """
     Instrument FastAPI application with OpenTelemetry.
     Call this after FastAPI app is created.
+    Skips instrumentation if telemetry is disabled.
     
     Args:
         app: FastAPI application instance
     """
+    if not _telemetry_enabled:
+        return
     FastAPIInstrumentor.instrument_app(app)
 
 

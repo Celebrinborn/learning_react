@@ -1,14 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 import os
 
+from config import load_environment
 from routes import map_router, character_router
 from telemetry import setup_telemetry
 from telemetry.config import instrument_fastapi
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from appropriate .env file
+load_environment()
 
 # Initialize OpenTelemetry
 setup_telemetry()

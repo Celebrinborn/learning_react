@@ -8,13 +8,26 @@ let tracer: Tracer | null = null;
 let initialized = false;
 
 /**
+ * Check if telemetry is enabled via environment variable.
+ */
+function isTelemetryEnabled(): boolean {
+  const enabled = import.meta.env.VITE_TELEMETRY_ENABLED;
+  return enabled === 'true' || enabled === '1' || enabled === 'yes';
+}
+
+/**
  * Initialize OpenTelemetry tracer provider and instrumentation.
  * Configures OTLP exporter to send traces to localhost:4318.
- * Will silently fail (no-op) if no collector is running.
+ * Skips setup entirely if VITE_TELEMETRY_ENABLED is false.
  */
 export async function setupTelemetry(serviceName: string = 'dnd-frontend'): Promise<void> {
   if (initialized) return;
   initialized = true;
+
+  if (!isTelemetryEnabled()) {
+    console.log('Telemetry disabled via VITE_TELEMETRY_ENABLED=false');
+    return;
+  }
 
   try {
     // Dynamic imports to avoid blocking initial page load
