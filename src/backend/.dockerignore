@@ -1,0 +1,35 @@
+# Virtual environment
+env/
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+
+# Environment files (dev is gitignored)
+.env.dev
+
+# IDE
+.vscode/
+.idea/
+
+# Tests
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
