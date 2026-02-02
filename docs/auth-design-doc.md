@@ -341,32 +341,33 @@ async def get_current_user(request: Request) -> UserPrincipal:
 
 ### 5.5 Configuration
 
-**Backend Environment Variables**:
+**Note**: Configuration is now stored in `config.py` (backend) and `service.config.ts` (frontend), not in environment variables. The settings below are defined per-environment in those files.
 
-```env
-# Auth
-AUTH_MODE=entra_external_id
-ENTRA_ISSUER=https://<tenant>.ciamlogin.com/<tenant-id>/v2.0
-ENTRA_AUDIENCE=api://<api-client-id>
-ENTRA_JWKS_URL=https://<tenant>.ciamlogin.com/<tenant-id>/discovery/v2.0/keys
-# Optional
-ENTRA_REQUIRED_SCOPES=api://<api-client-id>/access_as_user
+**Backend Config** (`src/backend/src/config.py`):
 
-# Azure Blob Storage
-AZURE_STORAGE_CONNECTION_STRING=<connection-string>
-AZURE_BLOB_CONTAINER_MAPS=maps
-AZURE_BLOB_CONTAINER_CHARACTERS=characters
-AZURE_BLOB_CONTAINER_USERS=users
+```python
+# Auth settings
+auth_mode: "entra_external_id"
+entra_issuer: "https://<tenant>.ciamlogin.com/<tenant-id>/v2.0"
+entra_audience: "api://<api-client-id>"
+entra_jwks_url: "https://<tenant>.ciamlogin.com/<tenant-id>/discovery/v2.0/keys"
+entra_required_scopes: "api://<api-client-id>/access_as_user"
+
+# Azure Blob Storage (uses Managed Identity, no connection string)
+azure_storage_account_url: "https://<storage-account>.blob.core.windows.net"
+azure_container_maps: "maps"
+azure_container_characters: "characters"
+azure_container_users: "users"
 ```
 
-**Frontend Environment Variables**:
+**Frontend Config** (`src/frontend/src/config/service.config.ts`):
 
-```env
-VITE_AUTH_MODE=entra_external_id
-VITE_ENTRA_CLIENT_ID=<spa-client-id>
-VITE_ENTRA_AUTHORITY=https://<tenant>.ciamlogin.com/<tenant-id>
-VITE_API_SCOPE=api://<api-client-id>/access_as_user
-VITE_API_BASE_URL=https://api.example.com
+```typescript
+authMode: 'entra_external_id'
+entraClientId: '<spa-client-id>'
+entraAuthority: 'https://<tenant>.ciamlogin.com/<tenant-id>'
+apiScope: 'api://<api-client-id>/access_as_user'
+apiBaseUrl: 'https://api.example.com'
 ```
 
 ---

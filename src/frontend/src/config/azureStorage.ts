@@ -1,14 +1,13 @@
-// Configuration for Blob Storage
-// Currently using local storage for development
+// Re-export from service.config for backwards compatibility
+import { getConfig } from './service.config';
 
 export interface AzureStorageConfig {
   containerName: string;
 }
 
 export function getAzureStorageConfig(): AzureStorageConfig {
-  // For local development, just use a simple container name
-  // No Azure credentials needed
+  const config = getConfig();
   return {
-    containerName: 'dnd-local-storage',
+    containerName: config.storage.containerMaps,
   };
 }
