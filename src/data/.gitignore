@@ -1,0 +1,11 @@
+# Ignore all files in this directory (local blob storage data)
+*
+
+# But keep the directory structure
+!.gitignore
+!characters/
+!maps/
+!users/
+
+# Keep .gitkeep files to preserve empty directories
+!**/.gitkeep

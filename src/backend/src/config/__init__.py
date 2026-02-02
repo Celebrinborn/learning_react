@@ -12,14 +12,14 @@ def load_environment() -> str:
     Load environment variables from the appropriate .env file.
     
     Uses APP_ENV environment variable to determine which file to load:
-    - APP_ENV=dev or unset: loads .env.dev (if exists)
+    - APP_ENV=dev: loads .env.dev (if exists)
     - APP_ENV=test: loads .env.test
-    - APP_ENV=prod: loads .env.prod
+    - APP_ENV=prod or unset: loads .env.prod (default)
     
     Returns:
         The environment name that was loaded
     """
-    app_env = os.getenv("APP_ENV", "dev").lower()
+    app_env = os.getenv("APP_ENV", "prod").lower()
     
     # Map environment names to file names
     env_file_map = {
@@ -31,7 +31,7 @@ def load_environment() -> str:
         "production": ".env.prod",
     }
     
-    env_file = env_file_map.get(app_env, ".env.dev")
+    env_file = env_file_map.get(app_env, ".env.prod")
     
     # Get the backend directory (where this file lives)
     backend_dir = Path(__file__).parent.parent.parent
