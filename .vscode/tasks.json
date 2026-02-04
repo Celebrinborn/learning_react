@@ -4,7 +4,7 @@
     {
       "label": "Run Backend",
       "type": "shell",
-      "command": "$env:APP_ENV='dev'; $port = 8000; $conn = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue; if ($conn) { $pid = $conn.OwningProcess | Select-Object -First 1; $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue; Write-Host \"`n❌ Port $port is already in use by process: $($proc.ProcessName) (PID: $pid)\" -ForegroundColor Red; Write-Host \"`nTo kill the process, run:`n\" -ForegroundColor Yellow; Write-Host \"  Stop-Process -Id $pid -Force`n\" -ForegroundColor Cyan; exit 1 } else { .\\env\\Scripts\\Activate.ps1; python run_server.py }",
+      "command": "$env:APP_ENV='dev'; .\\env\\Scripts\\Activate.ps1; python run_server.py",
       "options": {
         "cwd": "${workspaceFolder}/src/backend"
       },
@@ -19,7 +19,7 @@
     {
       "label": "Run Frontend",
       "type": "shell",
-      "command": "$env:APP_ENV='dev'; $port = 5173; $conn = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue; if ($conn) { $pid = $conn.OwningProcess | Select-Object -First 1; $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue; Write-Host \"`n❌ Port $port is already in use by process: $($proc.ProcessName) (PID: $pid)\" -ForegroundColor Red; Write-Host \"`nTo kill the process, run:`n\" -ForegroundColor Yellow; Write-Host \"  Stop-Process -Id $pid -Force`n\" -ForegroundColor Cyan; exit 1 } else { npm run start }",
+      "command": "$env:APP_ENV='dev'; npm run start",
       "options": {
         "cwd": "${workspaceFolder}/src/frontend"
       },

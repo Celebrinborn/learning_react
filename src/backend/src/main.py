@@ -2,13 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
-from config import load_environment
-from routes import map_router, character_router
+from routes import map_router, character_router, homebrew_router
 from telemetry import setup_telemetry
 from telemetry.config import instrument_fastapi
+from log_config import setup_logging
+from middleware import TraceResponseMiddleware
 
-# Load environment variables from appropriate .env file
-load_environment()
+# Setup structured logging
+setup_logging()
 
 # Initialize OpenTelemetry
 setup_telemetry()
@@ -23,6 +24,10 @@ tags_metadata = [
         "name": "Characters",
         "description": "Operations for managing characters. Create, read, update, and delete player characters and NPCs.",
     },
+    {
+        "name": "Homebrew",
+        "description": "Operations for accessing homebrew content documents.",
+    },
 ]
 
 app = FastAPI(
@@ -31,6 +36,9 @@ app = FastAPI(
     version="1.0.0",
     openapi_tags=tags_metadata
 )
+
+# Add trace response middleware (adds X-Trace-ID header to all responses)
+app.add_middleware(TraceResponseMiddleware)
 
 # Configure CORS
 origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
@@ -46,6 +54,7 @@ app.add_middleware(
 # Include routers
 app.include_router(map_router)
 app.include_router(character_router)
+app.include_router(homebrew_router)
 
 # Instrument FastAPI with OpenTelemetry
 instrument_fastapi(app)

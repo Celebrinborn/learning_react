@@ -23,4 +23,5 @@ export const navigationLinks: NavLink[] = [
     ]
   },
   { path: '/campaign', label: 'Campaign' },
+  { path: '/homebrew', label: 'Homebrew' },
 ];

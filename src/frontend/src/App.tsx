@@ -12,6 +12,7 @@ import NotFound from './pages/NotFound';
 import EncounterBuilder from './pages/EncounterBuilder';
 import EncounterPlayer from './pages/EncounterPlayer';
 import Map from './pages/Map';
+import Homebrew from './pages/Homebrew';
 
 /**
  * Component to track route changes with OpenTelemetry
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="encounter_builder" element={<EncounterBuilder />} />
             <Route path="encounter_player" element={<EncounterPlayer />} />
             <Route path="map" element={<Map />} />
+            <Route path="homebrew/*" element={<Homebrew />} />
             <Route path="*" element={<NotFound />} />
           </Route>
 

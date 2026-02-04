@@ -25,12 +25,20 @@ class AuthConfig(TypedDict):
     entra_required_scopes: str
 
 
+class LoggingConfig(TypedDict):
+    """Logging configuration"""
+    output: Literal["file", "stdout"]  # Where logs go
+    level: Literal["DEBUG", "INFO", "WARNING", "ERROR"]  # Min log level
+    log_dir: str  # Only used if output=file
+
+
 class AppConfig(TypedDict):
     env: Literal["dev", "test", "prod"]
     host: str
     port: int
     storage: StorageConfig
     auth: AuthConfig
+    logging: LoggingConfig
 
 
 # Environment-specific configurations
@@ -54,6 +62,11 @@ CONFIGS: dict[str, AppConfig] = {
             "entra_jwks_url": "",
             "entra_required_scopes": "",
         },
+        "logging": {
+            "output": "file",
+            "level": "DEBUG",
+            "log_dir": "./logs",
+        },
     },
     "test": {
         "env": "test",
@@ -74,6 +87,11 @@ CONFIGS: dict[str, AppConfig] = {
             "entra_jwks_url": "https://<tenant>.ciamlogin.com/<tenant-id>/discovery/v2.0/keys",
             "entra_required_scopes": "api://<api-client-id>/access_as_user",
         },
+        "logging": {
+            "output": "stdout",
+            "level": "INFO",
+            "log_dir": "./logs",
+        },
     },
     "prod": {
         "env": "prod",
@@ -93,6 +111,11 @@ CONFIGS: dict[str, AppConfig] = {
             "entra_audience": "api://<api-client-id>",
             "entra_jwks_url": "https://<tenant>.ciamlogin.com/<tenant-id>/discovery/v2.0/keys",
             "entra_required_scopes": "api://<api-client-id>/access_as_user",
+        },
+        "logging": {
+            "output": "stdout",
+            "level": "INFO",
+            "log_dir": "./logs",
         },
     },
 }

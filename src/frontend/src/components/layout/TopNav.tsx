@@ -3,6 +3,7 @@ import { makeStyles, tokens, Button, Menu, MenuTrigger, MenuPopover, MenuList, M
 import { useAuth } from '../../hooks/useAuth';
 import { navigationLinks } from '../../config/navigation';
 import logoDragon from '../../assets/Logo_dragon.png';
+import HomebrewMenu from './HomebrewMenu';
 
 const useStyles = makeStyles({
   header: {
@@ -89,8 +90,13 @@ export default function TopNav() {
           <NavLink to="/">
             <img src={logoDragon} alt="Logo" className={styles.logo} />
           </NavLink>
-          {navigationLinks.map((link) => 
-            link.children ? (
+          {navigationLinks.map((link) => {
+            // Dynamic homebrew dropdown
+            if (link.path === '/homebrew') {
+              return <HomebrewMenu key={link.path} triggerClassName={styles.menuTrigger} />;
+            }
+
+            return link.children ? (
               // Dropdown menu
               <Menu key={link.path}>
                 <MenuTrigger disableButtonEnhancement>
@@ -113,14 +119,14 @@ export default function TopNav() {
               <NavLink
                 key={link.path}
                 to={link.path}
-                className={({ isActive }) => 
+                className={({ isActive }) =>
                   isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
                 }
               >
                 {link.label}
               </NavLink>
-            )
-          )}
+            );
+          })}
         </div>
         
         <div className={styles.authControls}>
