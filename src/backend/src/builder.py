@@ -8,6 +8,7 @@ from pathlib import Path
 from config import get_config, AppConfig
 from interfaces.blob import IBlobStorage
 from providers.local_file_blob import LocalFileBlobProvider
+from providers.azure_blob import AzureBlobProvider
 
 
 class StorageBuilder:
@@ -46,45 +47,45 @@ class StorageBuilder:
         if storage_type == "local":
             return LocalFileBlobProvider(self.base_data_path)
         elif storage_type == "azure":
-            # Future implementation
-            raise NotImplementedError("Azure blob storage not yet implemented")
+            return AzureBlobProvider(
+                account_url=self.storage_config["azure_storage_account_url"],
+                container_name=self.storage_config["azure_container_name"],
+            )
         else:
             raise ValueError(f"Unsupported storage type: {storage_type}")
 
     def build_map_blob_storage(self) -> IBlobStorage:
         """
         Build blob storage specifically for maps.
-        
+
         Returns:
             IBlobStorage implementation configured for maps
         """
         if self.storage_config["storage_type"] == "azure":
-            # Future: return AzureBlobProvider(
-            #     account_url=self.storage_config["azure_storage_account_url"],
-            #     container_name=self.storage_config["azure_container_maps"],
-            #     credential=DefaultAzureCredential()  # Managed Identity
-            # )
-            raise NotImplementedError("Azure blob storage not yet implemented")
-        
-        maps_path = self.base_data_path / "maps"
+            return AzureBlobProvider(
+                account_url=self.storage_config["azure_storage_account_url"],
+                container_name=self.storage_config["azure_container_name"],
+                prefix=self.storage_config["azure_prefix_maps"],
+            )
+
+        maps_path = self.base_data_path / self.storage_config["azure_prefix_maps"]
         return LocalFileBlobProvider(maps_path)
 
     def build_character_blob_storage(self) -> IBlobStorage:
         """
         Build blob storage specifically for characters.
-        
+
         Returns:
             IBlobStorage implementation configured for characters
         """
         if self.storage_config["storage_type"] == "azure":
-            # Future: return AzureBlobProvider(
-            #     account_url=self.storage_config["azure_storage_account_url"],
-            #     container_name=self.storage_config["azure_container_characters"],
-            #     credential=DefaultAzureCredential()  # Managed Identity
-            # )
-            raise NotImplementedError("Azure blob storage not yet implemented")
-        
-        characters_path = self.base_data_path / "characters"
+            return AzureBlobProvider(
+                account_url=self.storage_config["azure_storage_account_url"],
+                container_name=self.storage_config["azure_container_name"],
+                prefix=self.storage_config["azure_prefix_characters"],
+            )
+
+        characters_path = self.base_data_path / self.storage_config["azure_prefix_characters"]
         return LocalFileBlobProvider(characters_path)
 
     def build_user_blob_storage(self) -> IBlobStorage:
@@ -95,14 +96,13 @@ class StorageBuilder:
             IBlobStorage implementation configured for users
         """
         if self.storage_config["storage_type"] == "azure":
-            # Future: return AzureBlobProvider(
-            #     account_url=self.storage_config["azure_storage_account_url"],
-            #     container_name=self.storage_config["azure_container_users"],
-            #     credential=DefaultAzureCredential()  # Managed Identity
-            # )
-            raise NotImplementedError("Azure blob storage not yet implemented")
+            return AzureBlobProvider(
+                account_url=self.storage_config["azure_storage_account_url"],
+                container_name=self.storage_config["azure_container_name"],
+                prefix=self.storage_config["azure_prefix_users"],
+            )
 
-        users_path = self.base_data_path / "users"
+        users_path = self.base_data_path / self.storage_config["azure_prefix_users"]
         return LocalFileBlobProvider(users_path)
 
     def build_homebrew_blob_storage(self) -> IBlobStorage:
@@ -113,12 +113,11 @@ class StorageBuilder:
             IBlobStorage implementation configured for homebrew
         """
         if self.storage_config["storage_type"] == "azure":
-            # Future: return AzureBlobProvider(
-            #     account_url=self.storage_config["azure_storage_account_url"],
-            #     container_name=self.storage_config["azure_container_homebrew"],
-            #     credential=DefaultAzureCredential()  # Managed Identity
-            # )
-            raise NotImplementedError("Azure blob storage not yet implemented")
+            return AzureBlobProvider(
+                account_url=self.storage_config["azure_storage_account_url"],
+                container_name=self.storage_config["azure_container_name"],
+                prefix=self.storage_config["azure_prefix_homebrew"],
+            )
 
-        homebrew_path = self.base_data_path / "homebrew"
+        homebrew_path = self.base_data_path / self.storage_config["azure_prefix_homebrew"]
         return LocalFileBlobProvider(homebrew_path)

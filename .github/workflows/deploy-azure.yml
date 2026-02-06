@@ -1,0 +1,89 @@
+name: Build and Deploy to Azure
+
+# Required GitHub repository variables (Settings > Secrets and variables > Actions > Variables):
+#   AZURE_CLIENT_ID      - Azure AD App Registration client ID
+#   AZURE_TENANT_ID      - Azure tenant ID
+#   AZURE_SUBSCRIPTION_ID - Azure subscription ID
+#   ACR_NAME             - Azure Container Registry name (without .azurecr.io)
+#   RESOURCE_GROUP       - Azure resource group name
+#   BACKEND_APP          - Backend Container App name
+#   FRONTEND_APP         - Frontend Container App name
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  ACR_NAME: ${{ vars.ACR_NAME }}
+  RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+  BACKEND_APP: ${{ vars.BACKEND_APP }}
+  FRONTEND_APP: ${{ vars.FRONTEND_APP }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push backend
+        run: |
+          docker build \
+            -t ${{ env.ACR_NAME }}.azurecr.io/dnd-backend:${{ github.sha }} \
+            -t ${{ env.ACR_NAME }}.azurecr.io/dnd-backend:latest \
+            -f src/backend/Dockerfile \
+            src/backend
+          docker push ${{ env.ACR_NAME }}.azurecr.io/dnd-backend --all-tags
+
+      - name: Build and push frontend
+        run: |
+          docker build \
+            --build-arg APP_ENV=prod \
+            -t ${{ env.ACR_NAME }}.azurecr.io/dnd-frontend:${{ github.sha }} \
+            -t ${{ env.ACR_NAME }}.azurecr.io/dnd-frontend:latest \
+            -f src/frontend/Dockerfile \
+            src/frontend
+          docker push ${{ env.ACR_NAME }}.azurecr.io/dnd-frontend --all-tags
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    steps:
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy backend
+        run: |
+          az containerapp update \
+            --name ${{ env.BACKEND_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/dnd-backend:${{ github.sha }}
+
+      - name: Deploy frontend
+        run: |
+          az containerapp update \
+            --name ${{ env.FRONTEND_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/dnd-frontend:${{ github.sha }}

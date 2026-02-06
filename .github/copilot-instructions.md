@@ -39,6 +39,9 @@ When updating code, you must ALWAYS complete these steps as the final verificati
 
 **CRITICAL**: Running tests is MANDATORY after any code change - this is your last step before considering the task complete.
 
+### After Bug Fixes
+- After fixing a bug, you must update or add tests to ensure this bug cannot happen again—unless the existing tests already fail due to the bug. If the tests already fail, you do not need to add a new test, as the bug is already caught by the current test suite.
+
 ## Running Development Servers
 
 **Prefer VSCode tasks:** Run Backend, Run Frontend, Run All (Backend + Frontend)
