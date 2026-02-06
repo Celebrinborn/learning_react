@@ -27,9 +27,6 @@ ENV PATH=/root/.local/bin:$PATH
 COPY src/ ./src/
 COPY run_server.py .
 
-# Copy environment files (prod by default, can be overridden at runtime)
-COPY .env.prod .env.prod
-
 # Set environment variables
 ENV APP_ENV=prod
 ENV PYTHONUNBUFFERED=1
