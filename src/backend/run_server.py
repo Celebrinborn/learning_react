@@ -19,5 +19,5 @@ if __name__ == "__main__":
         host="127.0.0.1",
         port=8000,
         reload=True,
-        reload_dirs=[str(src_dir)]
+        reload_dirs=[str(src_dir), str(backend_dir.parent / "data")]
     )

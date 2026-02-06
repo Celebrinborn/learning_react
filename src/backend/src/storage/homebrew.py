@@ -9,13 +9,9 @@ DATA_DIR = Path(__file__).parent.parent.parent.parent / "data" / "homebrew"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def _extract_title_from_markdown(content: str, filename: str) -> str:
-    """Extract title from first # heading or use filename"""
-    for line in content.split('\n'):
-        if line.startswith('# '):
-            return line[2:].strip()
-    # Fallback: convert filename to title
-    return filename.replace('-', ' ').replace('_', ' ').title()
+def _get_title_from_filename(filename: str) -> str:
+    """Use filename as title, normalizing underscores to spaces"""
+    return filename.replace('_', ' ')
 
 
 def _build_tree(current_dir: Path, root_dir: Path) -> List[HomebrewTreeNode]:
@@ -37,8 +33,7 @@ def _build_tree(current_dir: Path, root_dir: Path) -> List[HomebrewTreeNode]:
                 ))
         elif entry.suffix == '.md':
             try:
-                content = entry.read_text(encoding='utf-8')
-                title = _extract_title_from_markdown(content, entry.stem)
+                title = _get_title_from_filename(entry.stem)
                 rel_path = str(entry.relative_to(root_dir)).replace("\\", "/")
                 doc_id = rel_path[:-3]  # Remove .md extension
                 nodes.append(HomebrewTreeNode(
@@ -48,7 +43,6 @@ def _build_tree(current_dir: Path, root_dir: Path) -> List[HomebrewTreeNode]:
                 ))
             except Exception as e:
                 print(f"Error reading {entry}: {e}")
-
     return nodes
 
 
@@ -77,8 +71,7 @@ def list_homebrew_documents() -> List[HomebrewDocumentSummary]:
         for file_path in DATA_DIR.glob("*.md"):
             try:
                 doc_id = file_path.stem
-                content = file_path.read_text(encoding='utf-8')
-                title = _extract_title_from_markdown(content, doc_id)
+                title = _get_title_from_filename(doc_id)
                 documents.append(HomebrewDocumentSummary(id=doc_id, title=title))
             except Exception as e:
                 print(f"Error reading {file_path}: {e}")
@@ -111,7 +104,7 @@ def get_homebrew_document(doc_id: str) -> Optional[HomebrewDocument]:
 
         try:
             content = file_path.read_text(encoding='utf-8')
-            title = _extract_title_from_markdown(content, file_path.stem)
+            title = _get_title_from_filename(file_path.stem)
             span.set_attribute("found", True)
             return HomebrewDocument(id=doc_id, title=title, content=content)
         except Exception as e:
