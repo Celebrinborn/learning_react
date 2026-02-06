@@ -12,13 +12,13 @@ const envFileMap: Record<string, string> = {
 }
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode: _mode }) => {
   // Check APP_ENV first, fall back to Vite's mode, default to prod
   const appEnv = process.env.APP_ENV?.toLowerCase() || 'prod'
   const envSuffix = envFileMap[appEnv] || 'prod'
-  
-  // Load the appropriate env file
-  const env = loadEnv(envSuffix, process.cwd(), '')
+
+  // Load the appropriate env file (reserved for future use)
+  const _env = loadEnv(envSuffix, process.cwd(), '')
   
   return {
     plugins: [react()],

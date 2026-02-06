@@ -1,11 +1,12 @@
 import { makeStyles, tokens } from "@fluentui/react-components";
-import type { ReactNode } from "react";
 
 export interface BoxProps {
   /** The name of the stat (e.g., "Strength", "Dexterity") */
   statName: string;
   /** The base value of the stat (e.g., 16, 12). The modifier is calculated as */
   statBaseValue: number;
+  /** flex-basis in px (default: 100) */
+  basis?: number;
 }
 
 const useStyles = makeStyles({
@@ -24,12 +25,12 @@ const useStyles = makeStyles({
   },
 });
 
-export default function StatsBox({ statName, statBaseValue }: BoxProps) {
+export default function StatsBox({ statName, statBaseValue, basis = 100 }: BoxProps) {
   return (
     <div
       className={useStyles().statsBox}
       style={{
-        flex: `1 1 ${box}px`,
+        flex: `1 1 ${basis}px`,
       }}
     >
       <h2>{statName}</h2>

@@ -8,7 +8,7 @@ class AuthService {
   private readonly TOKEN_KEY = 'auth_token';
 
   // Stub: Just simulates login without actual authentication
-  async login(username: string, password: string): Promise<User> {
+  async login(username: string, _password: string): Promise<User> {
     console.log('Stub login called with:', username);
     
     // Simulate API delay

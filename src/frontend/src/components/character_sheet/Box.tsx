@@ -48,7 +48,7 @@ export default function Box({
   grow = 1,
   shrink = 1,
   title = "",
-  gridRowSpan = 1,
+  gridRowSpan: _gridRowSpan = 1,
 }: BoxProps) {
   return (
     <div
