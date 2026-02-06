@@ -13,11 +13,7 @@ from .character import (
     update_character,
     delete_character,
 )
-from .homebrew import (
-    list_homebrew_documents,
-    list_homebrew_tree,
-    get_homebrew_document,
-)
+from .homebrew import HomebrewStorage
 
 __all__ = [
     "create_map_location",
@@ -30,7 +26,5 @@ __all__ = [
     "get_all_characters",
     "update_character",
     "delete_character",
-    "list_homebrew_documents",
-    "list_homebrew_tree",
-    "get_homebrew_document",
+    "HomebrewStorage",
 ]

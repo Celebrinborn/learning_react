@@ -90,7 +90,7 @@ class StorageBuilder:
     def build_user_blob_storage(self) -> IBlobStorage:
         """
         Build blob storage specifically for user data.
-        
+
         Returns:
             IBlobStorage implementation configured for users
         """
@@ -101,6 +101,24 @@ class StorageBuilder:
             #     credential=DefaultAzureCredential()  # Managed Identity
             # )
             raise NotImplementedError("Azure blob storage not yet implemented")
-        
+
         users_path = self.base_data_path / "users"
         return LocalFileBlobProvider(users_path)
+
+    def build_homebrew_blob_storage(self) -> IBlobStorage:
+        """
+        Build blob storage specifically for homebrew content.
+
+        Returns:
+            IBlobStorage implementation configured for homebrew
+        """
+        if self.storage_config["storage_type"] == "azure":
+            # Future: return AzureBlobProvider(
+            #     account_url=self.storage_config["azure_storage_account_url"],
+            #     container_name=self.storage_config["azure_container_homebrew"],
+            #     credential=DefaultAzureCredential()  # Managed Identity
+            # )
+            raise NotImplementedError("Azure blob storage not yet implemented")
+
+        homebrew_path = self.base_data_path / "homebrew"
+        return LocalFileBlobProvider(homebrew_path)

@@ -1,113 +1,183 @@
-from pathlib import Path
+from dataclasses import dataclass, field
 from typing import List, Optional
 
+from interfaces.blob import IBlobStorage
 from models.homebrew import HomebrewDocument, HomebrewDocumentSummary, HomebrewTreeNode
 from telemetry import get_tracer
 
-# Get the data directory path (relative to project root)
-DATA_DIR = Path(__file__).parent.parent.parent.parent / "data" / "homebrew"
-DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+def _empty_str_list() -> list[str]:
+    return []
 
 
-def _get_title_from_filename(filename: str) -> str:
-    """Use filename as title, normalizing underscores to spaces"""
-    return filename.replace('_', ' ')
+def _empty_node_dict() -> dict[str, "_TreeBuildNode"]:
+    return {}
 
 
-def _build_tree(current_dir: Path, root_dir: Path) -> List[HomebrewTreeNode]:
-    """Recursively build tree nodes for a directory."""
-    nodes: List[HomebrewTreeNode] = []
+@dataclass
+class _TreeBuildNode:
+    """Internal node for building the tree structure."""
+    files: list[str] = field(default_factory=_empty_str_list)
+    children: dict[str, "_TreeBuildNode"] = field(default_factory=_empty_node_dict)
 
-    # Sort entries: directories first, then files, alphabetical
-    entries = sorted(current_dir.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower()))
 
-    for entry in entries:
-        if entry.is_dir():
-            children = _build_tree(entry, root_dir)
+class HomebrewStorage:
+    """
+    Storage service for homebrew documents.
+    Uses IBlobStorage for file operations.
+    """
+
+    def __init__(self, blob_storage: IBlobStorage):
+        """
+        Initialize HomebrewStorage with a blob storage backend.
+
+        Args:
+            blob_storage: IBlobStorage implementation for file operations
+        """
+        self._storage = blob_storage
+
+    def _get_title_from_filename(self, filename: str) -> str:
+        """Use filename as title, normalizing underscores to spaces"""
+        return filename.replace('_', ' ')
+
+    def _build_tree_from_paths(self, paths: List[str]) -> List[HomebrewTreeNode]:
+        """
+        Build a hierarchical tree structure from a flat list of file paths.
+
+        Args:
+            paths: List of file paths (e.g., ["dir/subdir/file.md", "other.md"])
+
+        Returns:
+            List of HomebrewTreeNode representing the tree structure
+        """
+        root = _TreeBuildNode()
+
+        for path in paths:
+            parts = path.split('/')
+            current = root
+
+            for i, part in enumerate(parts):
+                if i == len(parts) - 1:
+                    # This is a file
+                    current.files.append(path)
+                else:
+                    # This is a directory
+                    if part not in current.children:
+                        current.children[part] = _TreeBuildNode()
+                    current = current.children[part]
+
+        return self._build_node_to_tree_nodes(root, "")
+
+    def _build_node_to_tree_nodes(
+        self,
+        node: _TreeBuildNode,
+        current_path: str
+    ) -> List[HomebrewTreeNode]:
+        """Convert _TreeBuildNode to HomebrewTreeNode list."""
+        nodes: List[HomebrewTreeNode] = []
+
+        # Sort: directories first (alphabetically), then files (alphabetically)
+        sorted_dirs = sorted(node.children.keys(), key=str.lower)
+        sorted_files = sorted(node.files, key=lambda p: p.split('/')[-1].lower())
+
+        # Add directory nodes
+        for dir_name in sorted_dirs:
+            dir_path = f"{current_path}/{dir_name}" if current_path else dir_name
+            children = self._build_node_to_tree_nodes(node.children[dir_name], dir_path)
+
             if children:  # Only include non-empty directories
                 nodes.append(HomebrewTreeNode(
-                    name=entry.name.replace('_', ' ').replace('-', ' ').title(),
+                    name=dir_name.replace('_', ' ').replace('-', ' ').title(),
                     type="directory",
-                    path=str(entry.relative_to(root_dir)).replace("\\", "/"),
+                    path=dir_path,
                     children=children,
                 ))
-        elif entry.suffix == '.md':
-            try:
-                title = _get_title_from_filename(entry.stem)
-                rel_path = str(entry.relative_to(root_dir)).replace("\\", "/")
-                doc_id = rel_path[:-3]  # Remove .md extension
-                nodes.append(HomebrewTreeNode(
-                    name=title,
-                    type="file",
-                    path=doc_id,
-                ))
-            except Exception as e:
-                print(f"Error reading {entry}: {e}")
-    return nodes
 
+        # Add file nodes
+        for file_path in sorted_files:
+            filename = file_path.split('/')[-1]
+            stem = filename[:-3]  # Remove .md extension
+            title = self._get_title_from_filename(stem)
+            doc_id = file_path[:-3]  # Remove .md extension from full path
 
-def list_homebrew_tree() -> List[HomebrewTreeNode]:
-    """Build a tree of homebrew documents respecting subdirectories."""
-    tracer = get_tracer()
-    with tracer.start_as_current_span("storage.list_homebrew_tree") as span:
-        if not DATA_DIR.exists():
-            span.set_attribute("count", 0)
-            return []
+            nodes.append(HomebrewTreeNode(
+                name=title,
+                type="file",
+                path=doc_id,
+            ))
 
-        nodes = _build_tree(DATA_DIR, DATA_DIR)
         return nodes
 
+    async def list_homebrew_tree(self) -> List[HomebrewTreeNode]:
+        """Build a tree of homebrew documents respecting subdirectories."""
+        tracer = get_tracer()
+        with tracer.start_as_current_span("storage.list_homebrew_tree") as span:
+            # Get all files from storage
+            all_paths = await self._storage.list()
 
-def list_homebrew_documents() -> List[HomebrewDocumentSummary]:
-    """List all available homebrew documents"""
-    tracer = get_tracer()
-    with tracer.start_as_current_span("storage.list_homebrew_documents") as span:
-        documents: List[HomebrewDocumentSummary] = []
+            # Filter to .md files only
+            md_paths = [p for p in all_paths if p.endswith('.md')]
 
-        if not DATA_DIR.exists():
-            span.set_attribute("count", 0)
+            if not md_paths:
+                span.set_attribute("count", 0)
+                return []
+
+            nodes = self._build_tree_from_paths(md_paths)
+            return nodes
+
+    async def list_homebrew_documents(self) -> List[HomebrewDocumentSummary]:
+        """List all available homebrew documents (root level only)."""
+        tracer = get_tracer()
+        with tracer.start_as_current_span("storage.list_homebrew_documents") as span:
+            documents: List[HomebrewDocumentSummary] = []
+
+            # Get all files from storage
+            all_paths = await self._storage.list()
+
+            # Filter to .md files in root directory only (no '/' in path)
+            root_md_paths = [p for p in all_paths if p.endswith('.md') and '/' not in p]
+
+            for path in root_md_paths:
+                try:
+                    doc_id = path[:-3]  # Remove .md extension
+                    title = self._get_title_from_filename(doc_id)
+                    documents.append(HomebrewDocumentSummary(id=doc_id, title=title))
+                except Exception as e:
+                    print(f"Error processing {path}: {e}")
+
+            # Sort by title
+            documents.sort(key=lambda d: d.title)
+            span.set_attribute("count", len(documents))
             return documents
 
-        for file_path in DATA_DIR.glob("*.md"):
-            try:
-                doc_id = file_path.stem
-                title = _get_title_from_filename(doc_id)
-                documents.append(HomebrewDocumentSummary(id=doc_id, title=title))
-            except Exception as e:
-                print(f"Error reading {file_path}: {e}")
+    async def get_homebrew_document(self, doc_id: str) -> Optional[HomebrewDocument]:
+        """Get a homebrew document by ID (path relative to homebrew dir, without .md)."""
+        tracer = get_tracer()
+        with tracer.start_as_current_span("storage.get_homebrew_document") as span:
+            span.set_attribute("document.id", doc_id)
 
-        # Sort by title
-        documents.sort(key=lambda d: d.title)
-        span.set_attribute("count", len(documents))
-        return documents
-
-
-def get_homebrew_document(doc_id: str) -> Optional[HomebrewDocument]:
-    """Get a homebrew document by ID (path relative to homebrew dir, without .md extension)"""
-    tracer = get_tracer()
-    with tracer.start_as_current_span("storage.get_homebrew_document") as span:
-        span.set_attribute("document.id", doc_id)
-
-        # Security: prevent path traversal
-        try:
-            file_path = (DATA_DIR / f"{doc_id}.md").resolve()
-            if not str(file_path).startswith(str(DATA_DIR.resolve())):
+            # Security: basic validation (IBlobStorage handles path traversal)
+            if '..' in doc_id:
                 span.set_attribute("found", False)
                 return None
-        except (ValueError, OSError):
-            span.set_attribute("found", False)
-            return None
 
-        if not file_path.exists():
-            span.set_attribute("found", False)
-            return None
+            path = f"{doc_id}.md"
 
-        try:
-            content = file_path.read_text(encoding='utf-8')
-            title = _get_title_from_filename(file_path.stem)
-            span.set_attribute("found", True)
-            return HomebrewDocument(id=doc_id, title=title, content=content)
-        except Exception as e:
-            print(f"Error reading homebrew document {doc_id}: {e}")
-            span.set_attribute("error", str(e))
-            return None
+            if not await self._storage.exists(path):
+                span.set_attribute("found", False)
+                return None
+
+            try:
+                data = await self._storage.read(path)
+                content = data.decode('utf-8')
+
+                # Extract filename from path for title
+                filename = doc_id.split('/')[-1] if '/' in doc_id else doc_id
+                title = self._get_title_from_filename(filename)
+
+                span.set_attribute("found", True)
+                return HomebrewDocument(id=doc_id, title=title, content=content)
+            except Exception as e:
+                print(f"Error reading homebrew document {doc_id}: {e}")
+                span.set_attribute("error", str(e))
+                return None
