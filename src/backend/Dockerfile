@@ -25,7 +25,6 @@ ENV PATH=/root/.local/bin:$PATH
 
 # Copy application code
 COPY src/ ./src/
-COPY run_server.py .
 
 # Set environment variables
 ENV APP_ENV=prod
