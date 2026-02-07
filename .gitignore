@@ -23,6 +23,7 @@ build
 .env
 .env.local
 .env.dev
+.env.docker.local
 !.env.dev.template
 !.env.test
 !.env.prod

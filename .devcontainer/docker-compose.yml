@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: .devcontainer/backend/Dockerfile
+    volumes:
+      - ..:/workspace:cached
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - APP_ENV=dev
+      - LOG_LEVEL=DEBUG
+      - LOG_FORMAT=text
+      - TELEMETRY_ENABLED=false
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+      - SERVICE_VERSION=0.1.0
+      - PORT=8000
+      - CORS_ORIGINS=http://localhost:5173,http://frontend:5173
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+    command: sleep infinity
+    networks:
+      - devnet
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: .devcontainer/frontend/Dockerfile
+    volumes:
+      - ..:/workspace:cached
+      - frontend-node-modules:/workspace/src/frontend/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_ENVIRONMENT=development
+      - VITE_LOG_LEVEL=debug
+      - VITE_TELEMETRY_ENABLED=false
+      - VITE_OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces
+      - VITE_SERVICE_VERSION=0.1.0
+      - VITE_API_BASE_URL=http://localhost:8000
+    command: sleep infinity
+    depends_on:
+      - backend
+    networks:
+      - devnet
+
+networks:
+  devnet:
+
+volumes:
+  frontend-node-modules:

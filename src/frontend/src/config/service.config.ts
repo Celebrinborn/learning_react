@@ -60,7 +60,7 @@ const CONFIGS: Record<Environment, AppConfig> = {
   },
   prod: {
     env: 'prod',
-    apiBaseUrl: 'https://api.example.com',
+    apiBaseUrl: '/api',
     storage: {
       containerMaps: 'maps',
       containerCharacters: 'characters',
@@ -68,9 +68,9 @@ const CONFIGS: Record<Environment, AppConfig> = {
     },
     auth: {
       authMode: 'entra_external_id',
-      entraClientId: '<prod-spa-client-id>',
-      entraAuthority: 'https://<tenant>.ciamlogin.com/<tenant-id>',
-      apiScope: 'api://<api-client-id>/access_as_user',
+      entraClientId: 'cb31ddbc-6b5b-462e-a159-0eee2cd909f6',
+      entraAuthority: 'https://dndportalusers.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f',
+      apiScope: 'api://f50fed3a-b353-4f4c-b8f5-fb26733d03e5/access_as_user',
     },
   },
 };

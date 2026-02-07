@@ -1,13 +1,13 @@
 name: Build and Deploy to Azure
 
 # Required GitHub repository variables (Settings > Secrets and variables > Actions > Variables):
-#   AZURE_CLIENT_ID      - Azure AD App Registration client ID
-#   AZURE_TENANT_ID      - Azure tenant ID
+#   AZURE_CLIENT_ID       - Azure AD App Registration client ID
+#   AZURE_TENANT_ID       - Azure tenant ID
 #   AZURE_SUBSCRIPTION_ID - Azure subscription ID
-#   ACR_NAME             - Azure Container Registry name (without .azurecr.io)
-#   RESOURCE_GROUP       - Azure resource group name
-#   BACKEND_APP          - Backend Container App name
-#   FRONTEND_APP         - Frontend Container App name
+#   ACR_NAME              - Azure Container Registry name (without .azurecr.io)
+#   RESOURCE_GROUP        - Azure resource group name
+#   BACKEND_APP           - Backend Container App name
+#   FRONTEND_APP          - Frontend Container App name
 
 on:
   push:

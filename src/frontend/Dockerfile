@@ -12,6 +12,10 @@ RUN npm ci
 # Copy source code and env files
 COPY . .
 
+# Accept APP_ENV build arg (dev, test, prod) - used by vite.config.ts
+ARG APP_ENV=prod
+ENV APP_ENV=${APP_ENV}
+
 # Build the application
 RUN npm run build
 
