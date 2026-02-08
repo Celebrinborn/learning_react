@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { makeStyles, tokens, Input, Button, Label, Card, Text, Title3 } from '@fluentui/react-components';
+import { useMsal } from '@azure/msal-react';
 import { useAuth } from '../hooks/useAuth';
+import { config } from '../config/service.config';
 
 const useStyles = makeStyles({
   container: {
@@ -49,7 +51,7 @@ const useStyles = makeStyles({
   },
 });
 
-export default function Login() {
+function LocalFakeLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const { login } = useAuth();
@@ -67,40 +69,72 @@ export default function Login() {
   };
 
   return (
+    <>
+      <form onSubmit={handleSubmit}>
+        <div className={styles.formGroup}>
+          <Label htmlFor="username">Username</Label>
+          <Input
+            id="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Enter username"
+            required
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter password"
+            required
+          />
+        </div>
+        <Button type="submit" appearance="primary" className={styles.submitButton}>
+          Login
+        </Button>
+      </form>
+      <Text className={styles.note}>
+        Note: This is a stub authentication system. Any username/password will work.
+      </Text>
+    </>
+  );
+}
+
+function EntraLogin() {
+  const { instance } = useMsal();
+  const styles = useStyles();
+
+  const handleMsalLogin = () => {
+    instance.loginRedirect({
+      scopes: [config.auth.apiScope],
+    });
+  };
+
+  return (
+    <Button
+      appearance="primary"
+      className={styles.submitButton}
+      onClick={handleMsalLogin}
+    >
+      Sign in with Microsoft
+    </Button>
+  );
+}
+
+export default function Login() {
+  const styles = useStyles();
+  const isEntra = config.auth.authMode === 'entra_external_id';
+
+  return (
     <div className={styles.container}>
       <Card className={styles.card}>
         <Title3 className={styles.title}>Login</Title3>
-        <Text className={styles.subtitle}>Welcome to D&D Stats Sheet</Text>
-        <form onSubmit={handleSubmit}>
-          <div className={styles.formGroup}>
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
-              required
-            />
-          </div>
-          <Button type="submit" appearance="primary" className={styles.submitButton}>
-            Login
-          </Button>
-        </form>
-        <Text className={styles.note}>
-          Note: This is a stub authentication system. Any username/password will work.
-        </Text>
+        <Text className={styles.subtitle}>Welcome to D&amp;D Stats Sheet</Text>
+        {isEntra ? <EntraLogin /> : <LocalFakeLogin />}
       </Card>
     </div>
   );

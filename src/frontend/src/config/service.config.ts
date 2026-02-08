@@ -38,9 +38,9 @@ const CONFIGS: Record<Environment, AppConfig> = {
     },
     auth: {
       authMode: 'local_fake',
-      entraClientId: '',
-      entraAuthority: '',
-      apiScope: '',
+      entraClientId: 'cb31ddbc-6b5b-462e-a159-0eee2cd909f6',
+      entraAuthority: 'https://dndportalusers.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f',
+      apiScope: 'api://f50fed3a-b353-4f4c-b8f5-fb26733d03e5/access_as_user',
     },
   },
   test: {
@@ -82,7 +82,7 @@ const CONFIGS: Record<Environment, AppConfig> = {
  */
 export function getConfig(): AppConfig {
   const env = (import.meta.env.VITE_APP_ENV || 'dev') as string;
-  
+
   // Normalize environment names
   const envMap: Record<string, Environment> = {
     dev: 'dev',
@@ -92,14 +92,22 @@ export function getConfig(): AppConfig {
     prod: 'prod',
     production: 'prod',
   };
-  
+
   const normalizedEnv = envMap[env.toLowerCase()];
   if (!normalizedEnv) {
     console.warn(`Unknown environment: ${env}, defaulting to 'dev'`);
     return CONFIGS.dev;
   }
-  
-  return CONFIGS[normalizedEnv];
+
+  const appConfig = CONFIGS[normalizedEnv];
+
+  // Allow overriding auth mode via env var (e.g. VITE_AUTH_MODE=entra_external_id)
+  const authModeOverride = import.meta.env.VITE_AUTH_MODE as AuthMode | undefined;
+  if (authModeOverride && (authModeOverride === 'local_fake' || authModeOverride === 'entra_external_id')) {
+    return { ...appConfig, auth: { ...appConfig.auth, authMode: authModeOverride } };
+  }
+
+  return appConfig;
 }
 
 // Convenience exports for common config values

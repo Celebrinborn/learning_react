@@ -1,7 +1,9 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
+import { useMsal } from '@azure/msal-react';
 import { authService } from '../services/auth';
 import type { User } from '../services/auth';
+import { config } from '../config/service.config';
 
 interface AuthContextType {
   user: User | null;
@@ -12,12 +14,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+function LocalFakeAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in (stub just checks localStorage)
     const currentUser = authService.getCurrentUser();
     setUser(currentUser);
     setIsLoading(false);
@@ -38,6 +39,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
+}
+
+function EntraAuthProvider({ children }: { children: ReactNode }) {
+  const { instance, accounts } = useMsal();
+
+  const user: User | null = accounts.length > 0
+    ? {
+        id: accounts[0].localAccountId,
+        name: accounts[0].name ?? accounts[0].username,
+        email: accounts[0].username,
+      }
+    : null;
+
+  const login = async () => {
+    // Entra login is handled via MSAL redirect on the Login page
+  };
+
+  const logout = () => {
+    instance.logoutRedirect();
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout, isLoading: false }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  if (config.auth.authMode === 'entra_external_id') {
+    return <EntraAuthProvider>{children}</EntraAuthProvider>;
+  }
+  return <LocalFakeAuthProvider>{children}</LocalFakeAuthProvider>;
 }
 
 export function useAuth() {

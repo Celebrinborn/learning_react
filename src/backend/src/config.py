@@ -4,6 +4,7 @@ All settings are defined here in a dict per environment.
 The builder reads from this to create objects.
 """
 
+import copy
 import os
 from typing import Literal, TypedDict
 
@@ -61,10 +62,10 @@ CONFIGS: dict[str, AppConfig] = {
         },
         "auth": {
             "auth_mode": "local_fake",
-            "entra_issuer": "",
-            "entra_audience": "",
-            "entra_jwks_url": "",
-            "entra_required_scopes": "",
+            "entra_issuer": "https://dndportalusers.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f/v2.0",
+            "entra_audience": "api://f50fed3a-b353-4f4c-b8f5-fb26733d03e5",
+            "entra_jwks_url": "https://dndportalusers.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f/discovery/v2.0/keys",
+            "entra_required_scopes": "api://f50fed3a-b353-4f4c-b8f5-fb26733d03e5/access_as_user",
         },
         "logging": {
             "output": "file",
@@ -88,10 +89,10 @@ CONFIGS: dict[str, AppConfig] = {
         },
         "auth": {
             "auth_mode": "entra_external_id",
-            "entra_issuer": "https://<tenant>.ciamlogin.com/<tenant-id>/v2.0",
-            "entra_audience": "api://<api-client-id>",
-            "entra_jwks_url": "https://<tenant>.ciamlogin.com/<tenant-id>/discovery/v2.0/keys",
-            "entra_required_scopes": "api://<api-client-id>/access_as_user",
+            "entra_issuer": "https://dndportalusers.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f/v2.0",
+            "entra_audience": "api://f50fed3a-b353-4f4c-b8f5-fb26733d03e5",
+            "entra_jwks_url": "https://dndportalusers.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f/discovery/v2.0/keys",
+            "entra_required_scopes": "api://f50fed3a-b353-4f4c-b8f5-fb26733d03e5/access_as_user",
         },
         "logging": {
             "output": "stdout",
@@ -129,5 +130,12 @@ def get_config(env: str | None = None) -> AppConfig:
     normalized_env = env_map.get(env)
     if normalized_env is None:
         raise ValueError(f"Unknown environment: {env}. Valid: dev, prod")
-    
-    return CONFIGS[normalized_env]
+
+    config: AppConfig = copy.deepcopy(CONFIGS[normalized_env])
+
+    # Allow overriding auth mode via env var (e.g. AUTH_MODE=entra_external_id)
+    auth_mode_override = os.getenv("AUTH_MODE")
+    if auth_mode_override and auth_mode_override in ("local_fake", "entra_external_id"):
+        config["auth"]["auth_mode"] = auth_mode_override  # type: ignore[assignment]
+
+    return config
