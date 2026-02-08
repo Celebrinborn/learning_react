@@ -12,6 +12,9 @@ src_dir = backend_dir / "src"
 sys.path.insert(0, str(src_dir))
 
 if __name__ == "__main__":
+    from dotenv import load_dotenv
+    load_dotenv(backend_dir / ".env.dev")
+
     import uvicorn
     
     uvicorn.run(

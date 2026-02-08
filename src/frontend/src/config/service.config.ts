@@ -17,6 +17,7 @@ export interface AuthConfig {
   authMode: AuthMode;
   entraClientId: string;
   entraAuthority: string;
+  entraRedirectUri: string;
   apiScope: string;
 }
 
@@ -39,7 +40,8 @@ const CONFIGS: Record<Environment, AppConfig> = {
     auth: {
       authMode: 'local_fake',
       entraClientId: 'cb31ddbc-6b5b-462e-a159-0eee2cd909f6',
-      entraAuthority: 'https://dndportalusers.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f',
+      entraAuthority: 'https://dndportalusers.ciamlogin.com/',
+      entraRedirectUri: 'http://localhost:5173',
       apiScope: 'api://f50fed3a-b353-4f4c-b8f5-fb26733d03e5/access_as_user',
     },
   },
@@ -55,6 +57,7 @@ const CONFIGS: Record<Environment, AppConfig> = {
       authMode: 'entra_external_id',
       entraClientId: '<test-spa-client-id>',
       entraAuthority: 'https://<tenant>.ciamlogin.com/<tenant-id>',
+      entraRedirectUri: 'https://test.example.com',
       apiScope: 'api://<api-client-id>/access_as_user',
     },
   },
@@ -70,6 +73,7 @@ const CONFIGS: Record<Environment, AppConfig> = {
       authMode: 'entra_external_id',
       entraClientId: 'cb31ddbc-6b5b-462e-a159-0eee2cd909f6',
       entraAuthority: 'https://dndportalusers.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f',
+      entraRedirectUri: window.location.origin,
       apiScope: 'api://f50fed3a-b353-4f4c-b8f5-fb26733d03e5/access_as_user',
     },
   },

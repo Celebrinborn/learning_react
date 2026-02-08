@@ -4,7 +4,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { FluentProvider, webLightTheme } from '@fluentui/react-components';
 import { MemoryRouter } from 'react-router-dom';
 import Login from '../pages/Login';
@@ -32,8 +33,18 @@ vi.mock('../config/service.config', () => ({
 
 // Mock MSAL for entra mode
 const mockLoginRedirect = vi.fn();
+const mockMsalInProgress = vi.hoisted(() => ({ value: 'none' as string }));
 vi.mock('@azure/msal-react', () => ({
-  useMsal: () => ({ instance: { loginRedirect: mockLoginRedirect }, accounts: [] }),
+  useMsal: () => ({
+    instance: { loginRedirect: mockLoginRedirect },
+    accounts: [],
+    inProgress: mockMsalInProgress.value,
+  }),
+  MsalProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+vi.mock('../auth/msalInstance', () => ({
+  getMsalInstance: () => ({}),
 }));
 
 // Mock auth service for local_fake mode
@@ -83,6 +94,8 @@ describe('Login page', () => {
   describe('when auth mode is entra_external_id', () => {
     beforeEach(() => {
       mockAuthConfig.authMode = 'entra_external_id';
+      mockMsalInProgress.value = 'none';
+      mockLoginRedirect.mockReset();
     });
 
     it('shows Sign in with Microsoft button', () => {
@@ -94,6 +107,25 @@ describe('Login page', () => {
       renderLogin();
       expect(screen.queryByLabelText(/username/i)).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
+    });
+
+    it('shows error message when loginRedirect fails', async () => {
+      mockLoginRedirect.mockRejectedValue(new Error('Popup blocked'));
+      const user = userEvent.setup();
+
+      renderLogin();
+      await user.click(screen.getByRole('button', { name: /sign in with microsoft/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/popup blocked/i)).toBeInTheDocument();
+      });
+    });
+
+    it('disables sign-in button while login is in progress', () => {
+      mockMsalInProgress.value = 'login';
+
+      renderLogin();
+      expect(screen.getByRole('button', { name: /sign in with microsoft/i })).toBeDisabled();
     });
   });
 });

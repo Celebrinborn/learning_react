@@ -105,23 +105,35 @@ function LocalFakeLogin() {
 }
 
 function EntraLogin() {
-  const { instance } = useMsal();
+  const { instance, inProgress } = useMsal();
+  const [error, setError] = useState<string | null>(null);
   const styles = useStyles();
+  const isLoggingIn = inProgress !== 'none';
 
-  const handleMsalLogin = () => {
-    instance.loginRedirect({
-      scopes: [config.auth.apiScope],
-    });
+  const handleMsalLogin = async () => {
+    try {
+      setError(null);
+      await instance.loginRedirect({
+        scopes: [config.auth.apiScope],
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Login failed';
+      setError(message);
+    }
   };
 
   return (
-    <Button
-      appearance="primary"
-      className={styles.submitButton}
-      onClick={handleMsalLogin}
-    >
-      Sign in with Microsoft
-    </Button>
+    <>
+      <Button
+        appearance="primary"
+        className={styles.submitButton}
+        onClick={handleMsalLogin}
+        disabled={isLoggingIn}
+      >
+        Sign in with Microsoft
+      </Button>
+      {error && <Text className={styles.note}>{error}</Text>}
+    </>
   );
 }
 

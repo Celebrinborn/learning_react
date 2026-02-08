@@ -1,9 +1,10 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
-import { useMsal } from '@azure/msal-react';
+import { MsalProvider, useMsal } from '@azure/msal-react';
 import { authService } from '../services/auth';
 import type { User } from '../services/auth';
 import { config } from '../config/service.config';
+import { getMsalInstance } from '../auth/msalInstance';
 
 interface AuthContextType {
   user: User | null;
@@ -42,7 +43,7 @@ function LocalFakeAuthProvider({ children }: { children: ReactNode }) {
 }
 
 function EntraAuthProvider({ children }: { children: ReactNode }) {
-  const { instance, accounts } = useMsal();
+  const { instance, accounts, inProgress } = useMsal();
 
   const user: User | null = accounts.length > 0
     ? {
@@ -61,7 +62,7 @@ function EntraAuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading: false }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading: inProgress !== 'none' }}>
       {children}
     </AuthContext.Provider>
   );
@@ -69,7 +70,11 @@ function EntraAuthProvider({ children }: { children: ReactNode }) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   if (config.auth.authMode === 'entra_external_id') {
-    return <EntraAuthProvider>{children}</EntraAuthProvider>;
+    return (
+      <MsalProvider instance={getMsalInstance()}>
+        <EntraAuthProvider>{children}</EntraAuthProvider>
+      </MsalProvider>
+    );
   }
   return <LocalFakeAuthProvider>{children}</LocalFakeAuthProvider>;
 }

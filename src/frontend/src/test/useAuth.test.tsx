@@ -37,14 +37,20 @@ vi.mock('../services/auth', () => ({
 // Mock MSAL for entra mode
 const mockMsalLogout = vi.fn();
 const mockMsalAccounts = vi.hoisted(() => ({ value: [] as Array<{ username: string; name: string; localAccountId: string }> }));
+const mockMsalInProgress = vi.hoisted(() => ({ value: 'none' as string }));
 
 vi.mock('@azure/msal-react', () => ({
   useMsal: () => ({
     instance: { logoutRedirect: mockMsalLogout },
     accounts: mockMsalAccounts.value,
-    inProgress: 'none',
+    inProgress: mockMsalInProgress.value,
   }),
   useIsAuthenticated: () => mockMsalAccounts.value.length > 0,
+  MsalProvider: ({ children }: { children: ReactNode }) => children,
+}));
+
+vi.mock('../auth/msalInstance', () => ({
+  getMsalInstance: () => ({}),
 }));
 
 const localFakeWrapper = ({ children }: { children: ReactNode }) => (
@@ -127,6 +133,7 @@ describe('useAuth', () => {
       vi.clearAllMocks();
       mockAuthConfig.authMode = 'entra_external_id';
       mockMsalAccounts.value = [];
+      mockMsalInProgress.value = 'none';
     });
 
     it('provides null user when MSAL has no accounts', async () => {
@@ -168,6 +175,14 @@ describe('useAuth', () => {
       result.current.logout();
 
       expect(mockMsalLogout).toHaveBeenCalled();
+    });
+
+    it('isLoading is true while MSAL redirect is in progress', () => {
+      mockMsalInProgress.value = 'login';
+
+      const { result } = renderHook(() => useAuth(), { wrapper: localFakeWrapper });
+
+      expect(result.current.isLoading).toBe(true);
     });
   });
 });

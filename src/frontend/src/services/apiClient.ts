@@ -3,22 +3,8 @@
  * In entra mode, acquires a token and attaches it as a Bearer header.
  * In local_fake mode, makes plain requests.
  */
-import { PublicClientApplication } from '@azure/msal-browser';
 import { config } from '../config/service.config';
-
-let msalInstance: PublicClientApplication | null = null;
-
-function getMsalInstance(): PublicClientApplication {
-  if (!msalInstance) {
-    msalInstance = new PublicClientApplication({
-      auth: {
-        clientId: config.auth.entraClientId,
-        authority: config.auth.entraAuthority,
-      },
-    });
-  }
-  return msalInstance;
-}
+import { getMsalInstance } from '../auth/msalInstance';
 
 async function getAccessToken(): Promise<string | null> {
   if (config.auth.authMode !== 'entra_external_id') {

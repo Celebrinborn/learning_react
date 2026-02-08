@@ -25,14 +25,14 @@ vi.mock('../config/service.config', () => ({
   },
 }));
 
-// Mock MSAL token acquisition
+// Mock shared MSAL instance
 const mockAcquireTokenSilent = vi.fn();
 const mockGetAllAccounts = vi.fn().mockReturnValue([{ localAccountId: '123' }]);
-vi.mock('@azure/msal-browser', () => ({
-  PublicClientApplication: class {
-    acquireTokenSilent = mockAcquireTokenSilent;
-    getAllAccounts = mockGetAllAccounts;
-  },
+vi.mock('../auth/msalInstance', () => ({
+  getMsalInstance: () => ({
+    acquireTokenSilent: mockAcquireTokenSilent,
+    getAllAccounts: mockGetAllAccounts,
+  }),
 }));
 
 import { apiClient } from '../services/apiClient';

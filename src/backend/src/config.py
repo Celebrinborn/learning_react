@@ -89,9 +89,10 @@ CONFIGS: dict[str, AppConfig] = {
         },
         "auth": {
             "auth_mode": "entra_external_id",
-            "entra_issuer": "https://dndportalusers.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f/v2.0",
+            "entra_issuer": "https://dndportalusers.ciamlogin.com/",
             "entra_audience": "api://f50fed3a-b353-4f4c-b8f5-fb26733d03e5",
-            "entra_jwks_url": "https://dndportalusers.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f/discovery/v2.0/keys",
+            "entra_jwks_url": "https://dndportalusers.ciamlogin.com/",
+            # "entra_jwks_url": "https://dndportalusers.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f/discovery/v2.0/keys",
             "entra_required_scopes": "api://f50fed3a-b353-4f4c-b8f5-fb26733d03e5/access_as_user",
         },
         "logging": {
