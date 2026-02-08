@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
-from routes import map_router, character_router, homebrew_router
+from routes import map_router, character_router, homebrew_router, auth_router
 from telemetry import setup_telemetry
 from telemetry.config import instrument_fastapi
 from log_config import setup_logging
@@ -55,6 +55,7 @@ app.add_middleware(
 app.include_router(map_router)
 app.include_router(character_router)
 app.include_router(homebrew_router)
+app.include_router(auth_router)
 
 # Instrument FastAPI with OpenTelemetry
 instrument_fastapi(app)
