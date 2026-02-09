@@ -7,6 +7,8 @@ from telemetry import setup_telemetry
 from telemetry.config import instrument_fastapi
 from log_config import setup_logging
 from middleware import TraceResponseMiddleware
+from builder import AppBuilder
+from auth.dependencies import get_current_user
 
 # Setup structured logging
 setup_logging()
@@ -36,6 +38,11 @@ app = FastAPI(
     version="1.0.0",
     openapi_tags=tags_metadata
 )
+
+# Wire authentication
+_builder = AppBuilder()
+_auth_provider = _builder.build_auth_provider()
+app.dependency_overrides[get_current_user] = _auth_provider.dependency()
 
 # Add trace response middleware (adds X-Trace-ID header to all responses)
 app.add_middleware(TraceResponseMiddleware)

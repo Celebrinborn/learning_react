@@ -9,24 +9,50 @@ from config import get_config, AppConfig
 from interfaces.blob import IBlobStorage
 from providers.local_file_blob import LocalFileBlobProvider
 from providers.azure_blob import AzureBlobProvider
+from auth.providers.local_fake import LocalFakeAuthProvider
+from auth.providers.entra import EntraAuthProvider
 
 
-class StorageBuilder:
+class AppBuilder:
     """
-    Builder class responsible for instantiating storage providers.
+    Builder class responsible for instantiating providers.
     Centralizes provider creation and configuration.
     """
 
     def __init__(self, config: AppConfig | None = None):
         """
-        Initialize the storage builder.
-        
+        Initialize the builder.
+
         Args:
             config: Application configuration. If None, loads from APP_ENV.
         """
         self.config = config or get_config()
         self.storage_config = self.config["storage"]
         self.base_data_path = Path(self.storage_config["local_data_path"])
+
+    def build_auth_provider(self) -> LocalFakeAuthProvider | EntraAuthProvider:
+        """
+        Build and return an auth provider based on config.
+
+        Returns:
+            Auth provider instance
+
+        Raises:
+            ValueError: If auth_mode is not supported
+        """
+        auth_config = self.config["auth"]
+        auth_mode = auth_config["auth_mode"]
+
+        if auth_mode == "local_fake":
+            return LocalFakeAuthProvider()
+        elif auth_mode == "entra_external_id":
+            return EntraAuthProvider(
+                issuer=auth_config["entra_issuer"],
+                audience=auth_config["entra_audience"],
+                jwks_url=auth_config["entra_jwks_url"],
+            )
+        else:
+            raise ValueError(f"Unsupported auth mode: {auth_mode}")
 
     def build_blob_storage(self, storage_type: str | None = None) -> IBlobStorage:
         """
@@ -121,3 +147,7 @@ class StorageBuilder:
 
         homebrew_path = self.base_data_path / self.storage_config["azure_prefix_homebrew"]
         return LocalFileBlobProvider(homebrew_path)
+
+
+# Backward-compatible alias
+StorageBuilder = AppBuilder

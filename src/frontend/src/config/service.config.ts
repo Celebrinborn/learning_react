@@ -1,120 +1,28 @@
 /**
- * Application configuration.
- * All settings are defined here per environment.
- * Components read from getConfig() to get settings.
+ * Service-level configuration.
+ * Defines how the frontend communicates with backend services.
  */
 
-export type Environment = 'dev' | 'test' | 'prod';
-export type AuthMode = 'local_fake' | 'entra_external_id';
+import { config } from "./app.config";
 
-export interface StorageConfig {
-  containerMaps: string;
-  containerCharacters: string;
-  containerUsers: string;
-}
+// Re-export app-level config for consumers that import from service.config
+export { config, getConfig, AUTH_MODE } from "./app.config";
+export type { AppConfig, AuthConfig, AuthMode, Environment } from "./app.config";
 
-export interface AuthConfig {
-  authMode: AuthMode;
-  entraClientId: string;
-  entraAuthority: string;
-  entraRedirectUri: string;
-  apiScope: string;
-}
+export const API_BASE_URL = config.apiBaseUrl;
 
-export interface AppConfig {
-  env: Environment;
-  apiBaseUrl: string;
-  storage: StorageConfig;
-  auth: AuthConfig;
-}
-
-const CONFIGS: Record<Environment, AppConfig> = {
-  dev: {
-    env: 'dev',
-    apiBaseUrl: 'http://localhost:8000',
-    storage: {
-      containerMaps: 'maps',
-      containerCharacters: 'characters',
-      containerUsers: 'users',
-    },
-    auth: {
-      authMode: 'local_fake',
-      entraClientId: 'cb31ddbc-6b5b-462e-a159-0eee2cd909f6',
-      entraAuthority: 'https://dndportalusers.ciamlogin.com/',
-      entraRedirectUri: 'http://localhost:5173',
-      apiScope: 'api://f50fed3a-b353-4f4c-b8f5-fb26733d03e5/access_as_user',
-    },
-  },
-  test: {
-    env: 'test',
-    apiBaseUrl: 'https://api-test.example.com',
-    storage: {
-      containerMaps: 'maps-test',
-      containerCharacters: 'characters-test',
-      containerUsers: 'users-test',
-    },
-    auth: {
-      authMode: 'entra_external_id',
-      entraClientId: '<test-spa-client-id>',
-      entraAuthority: 'https://<tenant>.ciamlogin.com/<tenant-id>',
-      entraRedirectUri: 'https://test.example.com',
-      apiScope: 'api://<api-client-id>/access_as_user',
-    },
-  },
-  prod: {
-    env: 'prod',
-    apiBaseUrl: '/api',
-    storage: {
-      containerMaps: 'maps',
-      containerCharacters: 'characters',
-      containerUsers: 'users',
-    },
-    auth: {
-      authMode: 'entra_external_id',
-      entraClientId: 'cb31ddbc-6b5b-462e-a159-0eee2cd909f6',
-      entraAuthority: 'https://dndportalusers.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f',
-      entraRedirectUri: window.location.origin,
-      apiScope: 'api://f50fed3a-b353-4f4c-b8f5-fb26733d03e5/access_as_user',
-    },
-  },
+export const DEFAULT_HEADERS: Record<string, string> = {
+  "Content-Type": "application/json",
 };
 
+export const REQUEST_TIMEOUT_MS = 10_000;
+
 /**
- * Get configuration for the current environment.
- * Reads from VITE_APP_ENV environment variable.
- * Defaults to 'dev' if not set.
+ * Helper to build full API URLs.
  */
-export function getConfig(): AppConfig {
-  const env = (import.meta.env.VITE_APP_ENV || 'dev') as string;
-
-  // Normalize environment names
-  const envMap: Record<string, Environment> = {
-    dev: 'dev',
-    development: 'dev',
-    test: 'test',
-    testing: 'test',
-    prod: 'prod',
-    production: 'prod',
-  };
-
-  const normalizedEnv = envMap[env.toLowerCase()];
-  if (!normalizedEnv) {
-    console.warn(`Unknown environment: ${env}, defaulting to 'dev'`);
-    return CONFIGS.dev;
+export function buildApiUrl(path: string): string {
+  if (!path.startsWith("/")) {
+    path = `/${path}`;
   }
-
-  const appConfig = CONFIGS[normalizedEnv];
-
-  // Allow overriding auth mode via env var (e.g. VITE_AUTH_MODE=entra_external_id)
-  const authModeOverride = import.meta.env.VITE_AUTH_MODE as AuthMode | undefined;
-  if (authModeOverride && (authModeOverride === 'local_fake' || authModeOverride === 'entra_external_id')) {
-    return { ...appConfig, auth: { ...appConfig.auth, authMode: authModeOverride } };
-  }
-
-  return appConfig;
+  return `${API_BASE_URL}${path}`;
 }
-
-// Convenience exports for common config values
-export const config = getConfig();
-export const API_BASE_URL = config.apiBaseUrl;
-export const AUTH_MODE = config.auth.authMode;
