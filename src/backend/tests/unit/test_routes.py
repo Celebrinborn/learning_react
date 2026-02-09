@@ -2,10 +2,11 @@
 import pytest
 from fastapi.testclient import TestClient
 from pathlib import Path
-from unittest.mock import patch
 
 from models.character import CharacterCreate, CharacterUpdate
-from storage import character as storage
+from storage.character import CharacterStorage
+from providers.local_file_blob import LocalFileBlobProvider
+from routes import character as character_route_module
 from routes.character import router
 from fastapi import FastAPI
 
@@ -25,9 +26,11 @@ def client(app: FastAPI):
 
 
 @pytest.fixture(autouse=True)
-def setup_storage_path(character_storage_path: Path, monkeypatch):
-    """Mock the DATA_DIR to use a temporary directory."""
-    monkeypatch.setattr(storage, "DATA_DIR", character_storage_path)
+def setup_storage(character_storage_path: Path, monkeypatch):
+    """Inject a CharacterStorage backed by tmp_path."""
+    blob = LocalFileBlobProvider(character_storage_path)
+    test_storage = CharacterStorage(blob)
+    monkeypatch.setattr(character_route_module, "_character_storage", test_storage)
 
 
 class TestCharacterRoutes:

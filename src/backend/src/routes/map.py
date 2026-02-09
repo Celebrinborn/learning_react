@@ -1,23 +1,19 @@
 from fastapi import APIRouter, HTTPException
-from fastapi.security import OAuth2PasswordBearer
 from typing import Optional, List
 import logging
 from opentelemetry import trace
 
 from models.map import MapLocation, MapLocationCreate, MapLocationUpdate
-from storage.map import (
-    create_map_location,
-    get_map_location,
-    get_all_map_locations,
-    update_map_location,
-    delete_map_location,
-)
+from storage.map import MapStorage
+from builder import StorageBuilder
 from telemetry import get_tracer
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/map-locations", tags=["Map Locations"])
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+_builder = StorageBuilder()
+_map_storage = MapStorage(_builder.build_map_blob_storage())
 
 
 @router.post("", response_model=MapLocation, status_code=201)
@@ -28,7 +24,7 @@ async def create_location(location: MapLocationCreate):
     with tracer.start_as_current_span("create_map_location_handler") as span:
         span.set_attribute("location.name", location.name)
         try:
-            return create_map_location(location)
+            return await _map_storage.create_map_location(location)
         except ValueError as e:
             span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
             raise HTTPException(status_code=400, detail=str(e))
@@ -42,8 +38,7 @@ async def list_locations(map_id: Optional[str] = None):
     with tracer.start_as_current_span("list_map_locations_handler") as span:
         if map_id:
             span.set_attribute("filter.map_id", map_id)
-            # with count of returned locations and size
-        locations: list[MapLocation] = get_all_map_locations(map_id=map_id)
+        locations: list[MapLocation] = await _map_storage.get_all_map_locations(map_id=map_id)
         logger.info(
             f"Retrieved {len(locations)} map locations" f"with filter: map_id={map_id}"
         )
@@ -57,7 +52,7 @@ async def get_location(location_id: str):
     tracer = get_tracer()
     with tracer.start_as_current_span("get_map_location_handler") as span:
         span.set_attribute("location.id", location_id)
-        location = get_map_location(location_id)
+        location = await _map_storage.get_map_location(location_id)
         if not location:
             span.set_status(
                 trace.Status(trace.StatusCode.ERROR, "Map location not found")
@@ -76,7 +71,7 @@ async def update_location(location_id: str, location_data: MapLocationUpdate):
     with tracer.start_as_current_span("update_map_location_handler") as span:
         span.set_attribute("location.id", location_id)
         try:
-            location = update_map_location(location_id, location_data)
+            location = await _map_storage.update_map_location(location_id, location_data)
             if not location:
                 span.set_status(
                     trace.Status(trace.StatusCode.ERROR, "Map location not found")
@@ -99,7 +94,7 @@ async def delete_location(location_id: str):
     tracer = get_tracer()
     with tracer.start_as_current_span("delete_map_location_handler") as span:
         span.set_attribute("location.id", location_id)
-        success = delete_map_location(location_id)
+        success = await _map_storage.delete_map_location(location_id)
         if not success:
             span.set_status(
                 trace.Status(trace.StatusCode.ERROR, "Map location not found")

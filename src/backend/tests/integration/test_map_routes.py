@@ -4,8 +4,10 @@ from fastapi.testclient import TestClient
 from fastapi import FastAPI
 from pathlib import Path
 
+from routes import map as map_route_module
 from routes.map import router
-from storage import map as map_storage
+from storage.map import MapStorage
+from providers.local_file_blob import LocalFileBlobProvider
 
 
 @pytest.fixture
@@ -22,18 +24,14 @@ def client(app: FastAPI):
     return TestClient(app)
 
 
-@pytest.fixture
-def map_storage_path(tmp_path: Path) -> Path:
-    """Create a temporary directory for map storage."""
-    storage_dir = tmp_path / "maps"
-    storage_dir.mkdir(parents=True, exist_ok=True)
-    return storage_dir
-
-
 @pytest.fixture(autouse=True)
-def setup_storage_path(map_storage_path: Path, monkeypatch):
-    """Mock the DATA_DIR to use a temporary directory."""
-    monkeypatch.setattr(map_storage, "DATA_DIR", map_storage_path)
+def setup_storage(tmp_path: Path, monkeypatch):
+    """Inject a LocalFileBlobProvider backed by tmp_path."""
+    maps_dir = tmp_path / "maps"
+    maps_dir.mkdir(parents=True, exist_ok=True)
+    blob_storage = LocalFileBlobProvider(maps_dir)
+    test_map_storage = MapStorage(blob_storage)
+    monkeypatch.setattr(map_route_module, "_map_storage", test_map_storage)
 
 
 class TestMapLocationRoutes:

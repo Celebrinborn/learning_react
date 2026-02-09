@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import logging
@@ -10,6 +10,7 @@ from log_config import setup_logging
 from middleware import TraceResponseMiddleware
 from builder import AppBuilder
 from auth.dependencies import get_current_user
+from pydantic import BaseModel
 
 # Setup structured logging
 setup_logging()
@@ -90,6 +91,12 @@ async def health_check():
     """Health check endpoint"""
     logger.info("Health check endpoint accessed")
     return {"status": "healthy"}
+
+@app.get("/health_authenticated")
+async def health_check_authenticated(current_user=Depends(get_current_user)):
+    """Authenticated health check endpoint"""
+    logger.info(f"Authenticated health check accessed by user: {current_user.username}")
+    return {"status": "healthy", "user": str(current_user.username)}
 
 if __name__ == "__main__":
     logger.info("Running application with Uvicorn")

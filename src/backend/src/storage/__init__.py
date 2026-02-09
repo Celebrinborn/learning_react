@@ -1,30 +1,10 @@
 """Storage package"""
-from .map import (
-    create_map_location,
-    get_map_location,
-    get_all_map_locations,
-    update_map_location,
-    delete_map_location,
-)
-from .character import (
-    create_character,
-    get_character,
-    get_all_characters,
-    update_character,
-    delete_character,
-)
+from .character import CharacterStorage
+from .map import MapStorage
 from .homebrew import HomebrewStorage
 
 __all__ = [
-    "create_map_location",
-    "get_map_location",
-    "get_all_map_locations",
-    "update_map_location",
-    "delete_map_location",
-    "create_character",
-    "get_character",
-    "get_all_characters",
-    "update_character",
-    "delete_character",
+    "CharacterStorage",
+    "MapStorage",
     "HomebrewStorage",
 ]
