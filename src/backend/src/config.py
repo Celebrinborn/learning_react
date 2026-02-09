@@ -76,7 +76,7 @@ CONFIGS: dict[str, AppConfig] = {
     "prod": {
         "env": "prod",
         "host": "0.0.0.0",
-        "port": 8000,
+        "port": 80,
         "storage": {
             "storage_type": "azure",
             "local_data_path": "./data",
