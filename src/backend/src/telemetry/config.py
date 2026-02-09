@@ -18,66 +18,87 @@ _tracer: trace.Tracer | None = None
 _telemetry_enabled: bool = False
 
 
+def _is_truthy_env(name: str, default: str) -> bool:
+    return os.getenv(name, default).lower() in ("true", "1", "yes")
+
+
 def setup_telemetry(service_name: str = "dnd-backend") -> None:
     """
     Initialize OpenTelemetry tracer provider and instrumentation.
-    
-    Configures OTLP exporter to send traces to localhost:4317.
-    Will skip setup entirely if TELEMETRY_ENABLED is false.
-    
+
+    Contract changes vs old behavior:
+    - We still read TELEMETRY_ENABLED and expose it via _telemetry_enabled.
+    - Even when TELEMETRY_ENABLED=false, we STILL initialize tracing context so
+      trace/span IDs exist for correlation (export is skipped).
+    - If TELEMETRY_ENABLED=true, we configure the OTLP exporter.
+
     Args:
         service_name: Name of the service for trace identification
     """
     global _tracer, _telemetry_enabled
-    
-    # Check if telemetry is enabled
-    telemetry_enabled_str = os.getenv("TELEMETRY_ENABLED", "false").lower()
-    _telemetry_enabled = telemetry_enabled_str in ("true", "1", "yes")
-    
-    if not _telemetry_enabled:
-        logger.info("Telemetry disabled via TELEMETRY_ENABLED=false")
-        return
-    
+
+    # Keep the existing "enabled" contract/flag
+    _telemetry_enabled = _is_truthy_env("TELEMETRY_ENABLED", "false")
+
     # Get version from environment or default
     version = os.getenv("SERVICE_VERSION", "0.1.0")
     environment = os.getenv("ENVIRONMENT", "development")
-    
+
     # Create resource with service metadata
-    resource = Resource.create({
-        SERVICE_NAME: service_name,
-        SERVICE_VERSION: version,
-        "deployment.environment": environment,
-    })
-    
-    # Create tracer provider
-    provider = TracerProvider(resource=resource)
-    
-    # Configure OTLP exporter (no-op until receiver is running)
-    otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
-    otlp_exporter = OTLPSpanExporter(
-        endpoint=otlp_endpoint,
-        insecure=True,  # Use insecure for localhost development
+    resource = Resource.create(
+        {
+            SERVICE_NAME: service_name,
+            SERVICE_VERSION: version,
+            "deployment.environment": environment,
+        }
     )
-    
-    # Add batch span processor for async export
-    provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
-    
+
+    # Create tracer provider (ALWAYS, so we always have non-empty trace/span IDs)
+    provider = TracerProvider(resource=resource)
+
+    # Only attach an exporter when enabled; otherwise it's purely local context.
+    if _telemetry_enabled:
+        # For the OTLP *gRPC* exporter, prefer "host:port" (no scheme).
+        otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317")
+
+        # "insecure" just means "no TLS" for the gRPC channel.
+        # Default behavior:
+        # - If endpoint is localhost/127.0.0.1, allow insecure (dev default).
+        # - If endpoint is not local, require explicit opt-in via OTEL_EXPORTER_OTLP_INSECURE=true.
+        host = otlp_endpoint.split(":")[0]
+        is_local = host in ("localhost", "127.0.0.1")
+
+        insecure = is_local or _is_truthy_env("OTEL_EXPORTER_OTLP_INSECURE", "false")
+        if not insecure and not is_local:
+            logger.warning(
+                "Telemetry export enabled but OTLP endpoint is non-local and insecure export is not allowed. "
+                "Set OTEL_EXPORTER_OTLP_INSECURE=true if you truly want plaintext, or configure TLS."
+            )
+        else:
+            otlp_exporter = OTLPSpanExporter(
+                endpoint=otlp_endpoint,
+                insecure=True,  # plaintext gRPC (dev/local)
+            )
+            provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
+    else:
+        logger.info("Telemetry export disabled via TELEMETRY_ENABLED=false (context still initialized)")
+
     # Set as global tracer provider
     trace.set_tracer_provider(provider)
-    
+
     # Initialize tracer
     _tracer = trace.get_tracer(__name__)
-    
+
     logger.info(f"Telemetry initialized for {service_name} v{version} ({environment})")
     # FastAPI auto-instrumentation will be done after app creation
-    
+
 
 def instrument_fastapi(app: Any) -> None:
     """
     Instrument FastAPI application with OpenTelemetry.
     Call this after FastAPI app is created.
     Skips instrumentation if telemetry is disabled.
-    
+
     Args:
         app: FastAPI application instance
     """
@@ -89,10 +110,10 @@ def instrument_fastapi(app: Any) -> None:
 def get_tracer() -> trace.Tracer:
     """
     Get the application tracer instance.
-    
+
     Returns a no-op tracer if telemetry hasn't been initialized,
     allowing code to work in test environments without setup.
-    
+
     Returns:
         OpenTelemetry tracer for creating manual spans
     """
