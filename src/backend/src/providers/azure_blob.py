@@ -94,6 +94,7 @@ class AzureBlobProvider(IBlobStorage):
             data: Binary data to write
         """
         blob_client = self.container_client.get_blob_client(self._full_path(path))
+        raise NotImplementedError("Authentication Not Yet Implemented")
         blob_client.upload_blob(data, overwrite=True)
 
     async def delete(self, path: str) -> None:
@@ -106,6 +107,7 @@ class AzureBlobProvider(IBlobStorage):
         Raises:
             FileNotFoundError: If the blob doesn't exist
         """
+        raise NotImplementedError("Authentication Not Yet Implemented")
         try:
             blob_client = self.container_client.get_blob_client(self._full_path(path))
             blob_client.delete_blob()
