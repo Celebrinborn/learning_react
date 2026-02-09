@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import logging
 
 from routes import map_router, character_router, homebrew_router, auth_router
 from telemetry import setup_telemetry
@@ -13,7 +14,11 @@ from auth.dependencies import get_current_user
 # Setup structured logging
 setup_logging()
 
+logger = logging.getLogger(__name__)
+logger.info("Starting DND Stats Sheet API")
+
 # Initialize OpenTelemetry
+logger.info("Setting up telemetry")
 setup_telemetry()
 
 # API Tags for documentation grouping
@@ -32,6 +37,7 @@ tags_metadata = [
     },
 ]
 
+logger.info("Initializing FastAPI application")
 app = FastAPI(
     title="DND Stats Sheet API",
     description="Backend API for DND Stats Sheet application",
@@ -39,17 +45,21 @@ app = FastAPI(
     openapi_tags=tags_metadata
 )
 
+logger.info("Configuring authentication and middleware")
 # Wire authentication
 _builder = AppBuilder()
 _auth_provider = _builder.build_auth_provider()
 app.dependency_overrides[get_current_user] = _auth_provider.dependency()
 
+logger.info("Adding middleware and routers")
 # Add trace response middleware (adds X-Trace-ID header to all responses)
 app.add_middleware(TraceResponseMiddleware)
 
+logger.info("Configuring CORS")
 # Configure CORS
 origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
 
+logger.info(f"Allowed CORS origins: {origins}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -59,25 +69,30 @@ app.add_middleware(
 )
 
 # Include routers
+logger.info("Including API routers")
 app.include_router(map_router)
 app.include_router(character_router)
 app.include_router(homebrew_router)
 app.include_router(auth_router)
 
 # Instrument FastAPI with OpenTelemetry
+logger.info("Instrumenting FastAPI with OpenTelemetry")
 instrument_fastapi(app)
 
 @app.get("/")
 async def root():
     """Root endpoint"""
+    logger.info("Root endpoint accessed")
     return {"message": "DND Stats Sheet API", "status": "running"}
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
+    logger.info("Health check endpoint accessed")
     return {"status": "healthy"}
 
 if __name__ == "__main__":
+    logger.info("Running application with Uvicorn")
     import uvicorn
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("main:app", host="127.0.0.1", port=port, reload=True)
