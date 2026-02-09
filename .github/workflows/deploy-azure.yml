@@ -8,6 +8,7 @@ name: Build and Deploy to Azure
 #   RESOURCE_GROUP        - Azure resource group name
 #   BACKEND_APP           - Backend Container App name
 #   FRONTEND_APP          - Frontend Container App name
+#   BACKEND_URL           - Backend URL for nginx proxy (e.g. https://your-backend.azurecontainerapps.io)
 
 on:
   push:
@@ -86,4 +87,5 @@ jobs:
           az containerapp update \
             --name ${{ env.FRONTEND_APP }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
-            --image ${{ env.ACR_NAME }}.azurecr.io/dnd-frontend:${{ github.sha }}
+            --image ${{ env.ACR_NAME }}.azurecr.io/dnd-frontend:${{ github.sha }} \
+            --set-env-vars "BACKEND_URL=${{ vars.BACKEND_URL }}"
