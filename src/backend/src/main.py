@@ -57,7 +57,7 @@ app.add_middleware(TraceResponseMiddleware)
 
 logger.info("Configuring CORS")
 # Configure CORS
-origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+origins = os.getenv("CORS_ORIGINS", "https://cacolema-dnd-frontend.wonderfulcoast-e871ef79.westus2.azurecontainerapps.io").split(",")
 
 logger.info(f"Allowed CORS origins: {origins}")
 app.add_middleware(
@@ -94,5 +94,5 @@ async def health_check():
 if __name__ == "__main__":
     logger.info("Running application with Uvicorn")
     import uvicorn
-    port = int(os.getenv("PORT", 8000))
+    port = int(os.getenv("PORT", 80))
     uvicorn.run("main:app", host="127.0.0.1", port=port, reload=True)
