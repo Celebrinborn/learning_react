@@ -3,7 +3,8 @@ from azure.storage.blob import BlobServiceClient, ContainerClient
 from azure.identity import DefaultAzureCredential
 from azure.core.exceptions import ResourceNotFoundError
 from interfaces.blob import IBlobStorage
-
+import logging
+logger = logging.getLogger(__name__)
 
 class AzureBlobProvider(IBlobStorage):
     """
@@ -81,8 +82,11 @@ class AzureBlobProvider(IBlobStorage):
         try:
             blob_client = self.container_client.get_blob_client(self._full_path(path))
             download_stream = blob_client.download_blob()
-            return download_stream.readall()
+            result = download_stream.readall()
+            logger.info(f"Read blob at path: {path} (size={len(result)} bytes)")
+            return result
         except ResourceNotFoundError:
+            logger.error(f"Blob not found at path: {path}")
             raise FileNotFoundError(f"Blob not found at path: {path}")
 
     async def write(self, path: str, data: bytes) -> None:
@@ -94,6 +98,7 @@ class AzureBlobProvider(IBlobStorage):
             data: Binary data to write
         """
         blob_client = self.container_client.get_blob_client(self._full_path(path))
+        logger.error("Write operation not implemented: Authentication Not Yet Implemented")
         raise NotImplementedError("Authentication Not Yet Implemented")
         blob_client.upload_blob(data, overwrite=True)
 
@@ -107,6 +112,7 @@ class AzureBlobProvider(IBlobStorage):
         Raises:
             FileNotFoundError: If the blob doesn't exist
         """
+        logger.error("Delete operation not implemented: Authentication Not Yet Implemented")
         raise NotImplementedError("Authentication Not Yet Implemented")
         try:
             blob_client = self.container_client.get_blob_client(self._full_path(path))
@@ -125,7 +131,9 @@ class AzureBlobProvider(IBlobStorage):
             True if blob exists, False otherwise
         """
         blob_client = self.container_client.get_blob_client(self._full_path(path))
-        return blob_client.exists()
+        result = blob_client.exists()
+        logger.info(f"Checked existence for blob at path: {path} (exists={result})")
+        return result
 
     async def list(self, prefix: str = "") -> List[str]:
         """
@@ -150,6 +158,7 @@ class AzureBlobProvider(IBlobStorage):
             relative_path = self._strip_prefix(blob.name)
             blobs.append(relative_path)
 
+        logger.info(f"Listed blobs with prefix: {prefix} (found {len(blobs)} blobs)")
         return sorted(blobs)
 
     def get_url(self, path: str) -> str:
@@ -163,4 +172,6 @@ class AzureBlobProvider(IBlobStorage):
             Full URL to the blob
         """
         full_path = self._full_path(path)
-        return f"{self.account_url}/{self.container_name}/{full_path}"
+        url = f"{self.account_url}/{self.container_name}/{full_path}"
+        logger.info(f"Generated URL for blob at path: {path} -> {url}")
+        return url
