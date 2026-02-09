@@ -47,7 +47,8 @@ const CONFIGS: Record<Environment, AppConfig> = {
       containerUsers: "users",
     },
     auth: {
-      authMode: "local_fake",
+      // authMode: "local_fake",
+      authMode: "entra_external_id",
       entraClientId: "cb31ddbc-6b5b-462e-a159-0eee2cd909f6",
       entraAuthorityHost: "dndportal.ciamlogin.com",
       entraTenantId: "28a2c50b-b85c-47c4-8dd3-484dfbab055f",

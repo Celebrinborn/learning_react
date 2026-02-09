@@ -45,16 +45,18 @@ function LocalFakeAuthProvider({ children }: { children: ReactNode }) {
 function EntraAuthProvider({ children }: { children: ReactNode }) {
   const { instance, accounts, inProgress } = useMsal();
 
-  const user: User | null = accounts.length > 0
+  const account = instance.getActiveAccount() ?? accounts[0] ?? null;
+
+  const user: User | null = account
     ? {
-        id: accounts[0].localAccountId,
-        name: accounts[0].name ?? accounts[0].username,
-        email: accounts[0].username,
+        id: account.localAccountId,
+        name: account.name ?? account.username,
+        email: account.username,
       }
     : null;
 
   const login = async () => {
-    // Entra login is handled via MSAL redirect on the Login page
+    // handled via redirect on Login page
   };
 
   const logout = () => {
@@ -62,11 +64,19 @@ function EntraAuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading: inProgress !== 'none' }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        isLoading: inProgress !== 'none',
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
+
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   if (config.auth.authMode === 'entra_external_id') {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { makeStyles, tokens, Input, Button, Label, Card, Text, Title3 } from '@fluentui/react-components';
 import { useMsal } from '@azure/msal-react';
@@ -138,8 +138,18 @@ function EntraLogin() {
 }
 
 export default function Login() {
+  let navigate = useNavigate();
   const styles = useStyles();
   const isEntra = config.auth.authMode === 'entra_external_id';
+
+  const user = useAuth().user;
+  useEffect(() => {
+    if (user !== null){
+      // If user is already logged in, redirect to home page
+      navigate('/');
+    }
+  
+}, [user]);
 
   return (
     <div className={styles.container}>

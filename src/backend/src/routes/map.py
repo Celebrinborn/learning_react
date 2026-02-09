@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 from typing import Optional, List
 from opentelemetry import trace
 
@@ -13,6 +14,7 @@ from storage.map import (
 from telemetry import get_tracer
 
 router = APIRouter(prefix="/api/map-locations", tags=["Map Locations"])
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 @router.post("", response_model=MapLocation, status_code=201)
 async def create_location(location: MapLocationCreate):
@@ -26,7 +28,7 @@ async def create_location(location: MapLocationCreate):
             span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
             raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("", response_model=List[MapLocation])
+@router.get("", response_model=List[MapLocation], )
 async def list_locations(map_id: Optional[str] = None):
     """Get all map locations, optionally filtered by map_id"""
     tracer = get_tracer()
