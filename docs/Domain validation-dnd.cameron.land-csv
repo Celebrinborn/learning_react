@@ -1,0 +1,3 @@
+﻿"Type","Host","Value","Status"
+"CNAME","www or {subdomain}",""cacolema-dnd-frontend.wonderfulcoast-e871ef79.westus2.azurecontainerapps.io" or *.trafficmanager.net",""
+"TXT","asuid.www or asuid.{subdomain}","69E8D208D1215EF6B4BF3121BF934745B93271B8D23840B22B8EC1B71B216369",""

@@ -3,12 +3,12 @@ import type { MapLocation, MapLocationCreate, MapLocationUpdate } from '../types
 
 export const mapLocationService = {
   async getAll(mapId?: string): Promise<MapLocation[]> {
-    const url = new URL(`${API_BASE_URL}/api/map-locations`);
+    let path = `${API_BASE_URL}/api/map-locations`;
     if (mapId) {
-      url.searchParams.set('map_id', mapId);
+      path += `?map_id=${encodeURIComponent(mapId)}`;
     }
-    
-    const response = await fetch(url.toString());
+
+    const response = await fetch(path);
     if (!response.ok) {
       throw new Error(`Failed to fetch locations: ${response.statusText}`);
     }
