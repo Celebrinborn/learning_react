@@ -1,14 +1,14 @@
-import { API_BASE_URL } from '../config/api';
+import { apiClient } from './apiClient';
 import type { MapLocation, MapLocationCreate, MapLocationUpdate } from '../types/mapLocation';
 
 export const mapLocationService = {
   async getAll(mapId?: string): Promise<MapLocation[]> {
-    let path = `${API_BASE_URL}/api/map-locations`;
+    let path = '/api/map-locations';
     if (mapId) {
       path += `?map_id=${encodeURIComponent(mapId)}`;
     }
 
-    const response = await fetch(path);
+    const response = await apiClient.fetch(path);
     if (!response.ok) {
       throw new Error(`Failed to fetch locations: ${response.statusText}`);
     }
@@ -16,7 +16,7 @@ export const mapLocationService = {
   },
 
   async getById(id: string): Promise<MapLocation> {
-    const response = await fetch(`${API_BASE_URL}/api/map-locations/${id}`);
+    const response = await apiClient.fetch(`/api/map-locations/${id}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch location: ${response.statusText}`);
     }
@@ -24,14 +24,14 @@ export const mapLocationService = {
   },
 
   async create(data: MapLocationCreate): Promise<MapLocation> {
-    const response = await fetch(`${API_BASE_URL}/api/map-locations`, {
+    const response = await apiClient.fetch('/api/map-locations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to create location: ${response.statusText}`);
     }
@@ -39,14 +39,14 @@ export const mapLocationService = {
   },
 
   async update(id: string, data: MapLocationUpdate): Promise<MapLocation> {
-    const response = await fetch(`${API_BASE_URL}/api/map-locations/${id}`, {
+    const response = await apiClient.fetch(`/api/map-locations/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to update location: ${response.statusText}`);
     }
@@ -54,10 +54,10 @@ export const mapLocationService = {
   },
 
   async delete(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/api/map-locations/${id}`, {
+    const response = await apiClient.fetch(`/api/map-locations/${id}`, {
       method: 'DELETE',
     });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to delete location: ${response.statusText}`);
     }
