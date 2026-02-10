@@ -82,6 +82,13 @@ jobs:
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --image ${{ env.ACR_NAME }}.azurecr.io/dnd-backend:${{ github.sha }}
 
+      - name: Debug BACKEND_URL (GitHub vars)
+        run: |
+          echo "vars.BACKEND_URL = '${{ vars.BACKEND_URL }}'"
+          echo "FRONTEND_APP = '${{ env.FRONTEND_APP }}'"
+          echo "BACKEND_APP  = '${{ env.BACKEND_APP }}'"
+          echo "RESOURCE_GROUP = '${{ env.RESOURCE_GROUP }}'"
+
       - name: Deploy frontend
         run: |
           az containerapp update \
@@ -89,3 +96,17 @@ jobs:
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --image ${{ env.ACR_NAME }}.azurecr.io/dnd-frontend:${{ github.sha }} \
             --set-env-vars "BACKEND_URL=${{ vars.BACKEND_URL }}"
+
+      - name: Verify FRONTEND_APP env vars in Azure
+        run: |
+          az containerapp show \
+            --name "${{ env.FRONTEND_APP }}" \
+            --resource-group "${{ env.RESOURCE_GROUP }}" \
+            --query "properties.template.containers[0].env" -o table
+
+          echo "BACKEND_URL (Azure) = $(
+            az containerapp show \
+              --name "${{ env.FRONTEND_APP }}" \
+              --resource-group "${{ env.RESOURCE_GROUP }}" \
+              --query "properties.template.containers[0].env[?name=='BACKEND_URL'].value | [0]" -o tsv
+          )"

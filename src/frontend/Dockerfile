@@ -32,7 +32,7 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # the result to /etc/nginx/conf.d/. This allows one image to work across environments (local,
 # Azure, k8s) by setting BACKEND_URL differently in each deployment.
 # Search: "nginx docker envsubst", "nginx environment variables docker", "NGINX_ENVSUBST_TEMPLATE_DIR"
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+COPY default.conf.template /etc/nginx/templates/default.conf.template
 
 # Default backend URL (overridden by Container Apps environment variable)
 ENV BACKEND_URL=http://backend:8000
