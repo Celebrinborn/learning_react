@@ -1,6 +1,6 @@
 /**
  * Tests for useAuth hook
- * Testing behavior: Hook provides auth state and functions correctly
+ * Testing behavior: Hook provides auth state and functions via MSAL
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -8,44 +8,17 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { AuthProvider, useAuth } from '../hooks/useAuth';
 
-// Mutable config ref so we can switch auth mode between tests
-const mockAuthConfig = vi.hoisted(() => ({
-  authMode: 'local_fake' as string,
-  entraClientId: 'test-client-id',
-  entraAuthority: 'https://test.ciamlogin.com/test-tenant',
-  apiScope: 'api://test/access_as_user',
-}));
-
-vi.mock('../config/service.config', () => ({
-  get config() {
-    return { auth: mockAuthConfig };
-  },
-  get AUTH_MODE() {
-    return mockAuthConfig.authMode;
-  },
-}));
-
-// Mock auth service for local_fake mode
-vi.mock('../services/auth', () => ({
-  authService: {
-    getCurrentUser: vi.fn(() => null),
-    login: vi.fn(),
-    logout: vi.fn(),
-  },
-}));
-
-// Mock MSAL for entra mode
+// Mock MSAL
 const mockMsalLogout = vi.fn();
 const mockMsalAccounts = vi.hoisted(() => ({ value: [] as Array<{ username: string; name: string; localAccountId: string }> }));
 const mockMsalInProgress = vi.hoisted(() => ({ value: 'none' as string }));
 
 vi.mock('@azure/msal-react', () => ({
   useMsal: () => ({
-    instance: { logoutRedirect: mockMsalLogout },
+    instance: { logoutRedirect: mockMsalLogout, getActiveAccount: () => null },
     accounts: mockMsalAccounts.value,
     inProgress: mockMsalInProgress.value,
   }),
-  useIsAuthenticated: () => mockMsalAccounts.value.length > 0,
   MsalProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
@@ -53,136 +26,69 @@ vi.mock('../auth/msalInstance', () => ({
   getMsalInstance: () => ({}),
 }));
 
-const localFakeWrapper = ({ children }: { children: ReactNode }) => (
+const wrapper = ({ children }: { children: ReactNode }) => (
   <AuthProvider>{children}</AuthProvider>
 );
 
 describe('useAuth', () => {
-  describe('in local_fake mode', () => {
-    beforeEach(() => {
-      vi.clearAllMocks();
-      mockAuthConfig.authMode = 'local_fake';
-    });
-
-    it('provides null user when not authenticated', async () => {
-      const { result } = renderHook(() => useAuth(), { wrapper: localFakeWrapper });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      expect(result.current.user).toBeNull();
-    });
-
-    it('provides user data when authenticated', async () => {
-      const mockUser = { id: '1', name: 'Test User', email: 'test@test.com' };
-      const { authService } = await import('../services/auth');
-      vi.mocked(authService.getCurrentUser).mockReturnValue(mockUser);
-
-      const { result } = renderHook(() => useAuth(), { wrapper: localFakeWrapper });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      expect(result.current.user).toEqual(mockUser);
-    });
-
-    it('calls login service when login is invoked', async () => {
-      const mockUser = { id: '1', name: 'Test User', email: 'test@test.com' };
-      const { authService } = await import('../services/auth');
-      vi.mocked(authService.login).mockResolvedValue(mockUser);
-
-      const { result } = renderHook(() => useAuth(), { wrapper: localFakeWrapper });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      await result.current.login('username', 'password');
-
-      expect(authService.login).toHaveBeenCalledWith('username', 'password');
-    });
-
-    it('calls logout service when logout is invoked', async () => {
-      const { authService } = await import('../services/auth');
-      const { result } = renderHook(() => useAuth(), { wrapper: localFakeWrapper });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      result.current.logout();
-
-      await waitFor(() => {
-        expect(result.current.user).toBeNull();
-      });
-
-      expect(authService.logout).toHaveBeenCalled();
-    });
-
-    it('throws error when used outside AuthProvider', () => {
-      expect(() => {
-        renderHook(() => useAuth());
-      }).toThrow('useAuth must be used within an AuthProvider');
-    });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockMsalAccounts.value = [];
+    mockMsalInProgress.value = 'none';
   });
 
-  describe('in entra mode', () => {
-    beforeEach(() => {
-      vi.clearAllMocks();
-      mockAuthConfig.authMode = 'entra_external_id';
-      mockMsalAccounts.value = [];
-      mockMsalInProgress.value = 'none';
+  it('throws error when used outside AuthProvider', () => {
+    expect(() => {
+      renderHook(() => useAuth());
+    }).toThrow('useAuth must be used within an AuthProvider');
+  });
+
+  it('provides null user when MSAL has no accounts', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
     });
 
-    it('provides null user when MSAL has no accounts', async () => {
-      const { result } = renderHook(() => useAuth(), { wrapper: localFakeWrapper });
+    expect(result.current.user).toBeNull();
+  });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
+  it('provides user from MSAL account when authenticated', async () => {
+    mockMsalAccounts.value = [
+      { username: 'user@example.com', name: 'Test User', localAccountId: 'abc-123' },
+    ];
 
-      expect(result.current.user).toBeNull();
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
     });
 
-    it('provides user from MSAL account when authenticated', async () => {
-      mockMsalAccounts.value = [
-        { username: 'user@example.com', name: 'Test User', localAccountId: 'abc-123' },
-      ];
+    expect(result.current.user).not.toBeNull();
+    expect(result.current.user?.name).toBe('Test User');
+  });
 
-      const { result } = renderHook(() => useAuth(), { wrapper: localFakeWrapper });
+  it('calls MSAL logout when logout is invoked', async () => {
+    mockMsalAccounts.value = [
+      { username: 'user@example.com', name: 'Test User', localAccountId: 'abc-123' },
+    ];
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
-      expect(result.current.user).not.toBeNull();
-      expect(result.current.user?.name).toBe('Test User');
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
     });
 
-    it('calls MSAL logout when logout is invoked', async () => {
-      mockMsalAccounts.value = [
-        { username: 'user@example.com', name: 'Test User', localAccountId: 'abc-123' },
-      ];
+    result.current.logout();
 
-      const { result } = renderHook(() => useAuth(), { wrapper: localFakeWrapper });
+    expect(mockMsalLogout).toHaveBeenCalled();
+  });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
+  it('isLoading is true while MSAL redirect is in progress', () => {
+    mockMsalInProgress.value = 'login';
 
-      result.current.logout();
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
-      expect(mockMsalLogout).toHaveBeenCalled();
-    });
-
-    it('isLoading is true while MSAL redirect is in progress', () => {
-      mockMsalInProgress.value = 'login';
-
-      const { result } = renderHook(() => useAuth(), { wrapper: localFakeWrapper });
-
-      expect(result.current.isLoading).toBe(true);
-    });
+    expect(result.current.isLoading).toBe(true);
   });
 });

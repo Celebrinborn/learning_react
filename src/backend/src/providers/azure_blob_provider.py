@@ -2,11 +2,11 @@ from typing import List
 from azure.storage.blob import BlobServiceClient, ContainerClient
 from azure.identity import DefaultAzureCredential
 from azure.core.exceptions import ResourceNotFoundError
-from interfaces.blob import IBlobStorage
+from interfaces.blob import IBlob
 import logging
 logger = logging.getLogger(__name__)
 
-class AzureBlobProvider(IBlobStorage):
+class AzureBlobProvider(IBlob):
     """
     Azure Blob Storage implementation of IBlobStorage.
     Uses DefaultAzureCredential for Managed Identity authentication.

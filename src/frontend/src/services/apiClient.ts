@@ -1,16 +1,11 @@
 /**
  * Authenticated API client.
- * In entra mode, acquires a token and attaches it as a Bearer header.
- * In local_fake mode, makes plain requests.
+ * Acquires a token via MSAL and attaches it as a Bearer header.
  */
 import { config } from '../config/service.config';
 import { getMsalInstance } from '../auth/msalInstance';
 
 async function getAccessToken(): Promise<string | null> {
-  if (config.auth.authMode !== 'entra_external_id') {
-    return null;
-  }
-
   const instance = getMsalInstance();
   const accounts = instance.getAllAccounts();
   if (accounts.length === 0) {

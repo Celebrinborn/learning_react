@@ -21,7 +21,7 @@ class StorageConfig(TypedDict):
 
 
 class AuthConfig(TypedDict):
-    auth_mode: Literal["local_fake", "entra_external_id"]
+    auth_mode: Literal["entra_external_id"]
     entra_issuer: str
     entra_audience: str
     entra_jwks_url: str
@@ -61,7 +61,7 @@ CONFIGS: dict[str, AppConfig] = {
             "azure_prefix_homebrew": "homebrew",
         },
         "auth": {
-            "auth_mode": "local_fake",
+            "auth_mode": "entra_external_id",
             "entra_issuer": "https://28a2c50b-b85c-47c4-8dd3-484dfbab055f.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f/v2.0",
             "entra_audience": "api://f50fed3a-b353-4f4c-b8f5-fb26733d03e5",
             "entra_jwks_url": "https://dndportal.ciamlogin.com/28a2c50b-b85c-47c4-8dd3-484dfbab055f/discovery/v2.0/keys",
@@ -132,10 +132,5 @@ def get_config(env: str | None = None) -> AppConfig:
         raise ValueError(f"Unknown environment: {env}. Valid: dev, prod")
 
     config: AppConfig = copy.deepcopy(CONFIGS[normalized_env])
-
-    # Allow overriding auth mode via env var (e.g. AUTH_MODE=entra_external_id)
-    auth_mode_override = os.getenv("AUTH_MODE")
-    if auth_mode_override and auth_mode_override in ("local_fake", "entra_external_id"):
-        config["auth"]["auth_mode"] = auth_mode_override  # type: ignore[assignment]
 
     return config

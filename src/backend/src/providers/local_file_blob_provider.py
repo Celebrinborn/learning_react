@@ -1,11 +1,11 @@
 from pathlib import Path
 from typing import List
-from interfaces.blob import IBlobStorage
+from interfaces.blob import IBlob
 import logging
 logger = logging.getLogger(__name__)
 
 
-class LocalFileBlobProvider(IBlobStorage):
+class LocalFileBlobProvider(IBlob):
     """
     Local file system implementation of blob storage using pathlib.
     Stores blobs as files in a configured base directory.

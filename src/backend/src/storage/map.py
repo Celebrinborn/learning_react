@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime, timezone
 import re
 
-from interfaces.blob import IBlobStorage
+from interfaces.blob import IBlob
 from models.map import MapLocation, MapLocationCreate, MapLocationUpdate
 from telemetry import get_tracer
 
@@ -11,7 +11,7 @@ from telemetry import get_tracer
 class MapStorage:
     """Storage service for map locations. Uses IBlobStorage for file operations."""
 
-    def __init__(self, blob_storage: IBlobStorage) -> None:
+    def __init__(self, blob_storage: IBlob) -> None:
         self._storage = blob_storage
 
     def _sanitize_name(self, name: str) -> str:

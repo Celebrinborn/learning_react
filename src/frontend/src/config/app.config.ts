@@ -5,7 +5,7 @@
  */
 
 export type Environment = "dev" | "test" | "prod";
-export type AuthMode = "local_fake" | "entra_external_id";
+export type AuthMode = "entra_external_id";
 
 export interface StorageConfig {
   containerMaps: string;
@@ -47,7 +47,6 @@ const CONFIGS: Record<Environment, AppConfig> = {
       containerUsers: "users",
     },
     auth: {
-      // authMode: "local_fake",
       authMode: "entra_external_id",
       entraClientId: "cb31ddbc-6b5b-462e-a159-0eee2cd909f6",
       entraAuthorityHost: "dndportal.ciamlogin.com",
@@ -116,21 +115,7 @@ export function getConfig(): AppConfig {
     return CONFIGS.dev;
   }
 
-  const baseConfig = CONFIGS[env];
-
-  // Optional auth-mode override for local debugging
-  const authModeOverride = import.meta.env.VITE_AUTH_MODE as AuthMode | undefined;
-  if (authModeOverride && (authModeOverride === "local_fake" || authModeOverride === "entra_external_id")) {
-    return {
-      ...baseConfig,
-      auth: {
-        ...baseConfig.auth,
-        authMode: authModeOverride,
-      },
-    };
-  }
-
-  return baseConfig;
+  return CONFIGS[env];
 }
 
 // Convenience exports

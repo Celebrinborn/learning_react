@@ -1,26 +1,14 @@
-"""Integration test: main.py wires auth so /me works end-to-end.
+"""Integration test: main.py wires auth so get_current_user is overridden.
 
-In dev/local_fake mode (the default), /me should return 200 without any token.
-This tests the actual app from main.py, not a test-constructed FastAPI app.
+Verifies that the app startup correctly wires the EntraAuthProvider
+dependency into FastAPI's dependency_overrides.
 """
-from fastapi.testclient import TestClient
-
+from auth.dependencies import get_current_user
 from main import app
 
 
-client = TestClient(app)
+class TestAuthWiring:
+    """The app wires get_current_user to an EntraAuthProvider dependency."""
 
-
-class TestAuthWiringLocalFake:
-    """With default dev config (local_fake), /me returns a user without a token."""
-
-    def test_me_returns_200(self) -> None:
-        response = client.get("/me")
-        assert response.status_code == 200
-
-    def test_me_returns_subject(self) -> None:
-        response = client.get("/me")
-        data = response.json()
-        assert "subject" in data
-        assert isinstance(data["subject"], str)
-        assert len(data["subject"]) > 0
+    def test_get_current_user_is_overridden(self) -> None:
+        assert get_current_user in app.dependency_overrides

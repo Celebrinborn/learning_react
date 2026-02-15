@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime, timezone
 import uuid
 
-from interfaces.blob import IBlobStorage
+from interfaces.blob import IBlob
 from models.character import Character, CharacterCreate, CharacterUpdate
 from telemetry import get_tracer
 
@@ -11,7 +11,7 @@ from telemetry import get_tracer
 class CharacterStorage:
     """Storage service for characters. Uses IBlobStorage for file operations."""
 
-    def __init__(self, blob_storage: IBlobStorage) -> None:
+    def __init__(self, blob_storage: IBlob) -> None:
         self._storage = blob_storage
 
     async def create_character(self, character_data: CharacterCreate) -> Character:

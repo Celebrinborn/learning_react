@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from interfaces.blob import IBlobStorage
+from interfaces.blob import IBlob
 from models.homebrew import HomebrewDocument, HomebrewDocumentSummary, HomebrewTreeNode
 from telemetry import get_tracer
 
@@ -27,7 +27,7 @@ class HomebrewStorage:
     Uses IBlobStorage for file operations.
     """
 
-    def __init__(self, blob_storage: IBlobStorage):
+    def __init__(self, blob_storage: IBlob):
         """
         Initialize HomebrewStorage with a blob storage backend.
 

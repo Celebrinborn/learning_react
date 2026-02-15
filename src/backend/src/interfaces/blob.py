@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 
-class IBlobStorage(ABC):
+class IBlob(ABC):
     """
     Interface for blob storage operations.
     Defines the contract for reading/writing binary data.
