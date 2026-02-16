@@ -60,17 +60,17 @@ def build_authorization_factory(
       (typically via your internal DB keyed by principal.sub)
 
     Usage (in routes):
-        principal: Principal = Security(require_roles([[UserRole("admin")]]))
+        principal: Principal = Security(require_cnf_roles([[UserRole("admin")]]))
     """
 
-    def require_roles(required_roles: list[list[UserRole]]) -> AuthorizationDependency:
+    def require_cnf_roles(required_roles: list[list[UserRole]]) -> AuthorizationDependency:
         # This is intentionally a thin adapter that composes AuthN -> AuthZ.
         async def _checker(
             principal: Principal = Security(authenticate),
         ) -> Principal:
             try:
                 # If your authorizer enriches principal with roles, return that.
-                return await authorizer.require_roles(principal, required_roles)
+                return await authorizer.required_cnf_roles(principal, required_roles)
             except AuthorizationError:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -78,4 +78,4 @@ def build_authorization_factory(
                 )
 
         return _checker
-    return require_roles
+    return require_cnf_roles

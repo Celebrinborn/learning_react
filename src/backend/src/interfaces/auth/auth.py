@@ -63,7 +63,7 @@ class iAuthorization(ABC):
     """
 
     @abstractmethod
-    async def require_roles(
+    async def required_cnf_roles(
         self,
         principal: Principal,
         required_roles: list[list[UserRole]],
