@@ -42,7 +42,7 @@ def build_authentication_dependency(authenticator: iAuthentication) -> Authentic
 
         raw_jwt: str = creds.credentials
         try:
-            return await authenticator.get_current_user(raw_jwt)
+            return await authenticator.authenticate(raw_jwt)
         except AuthenticationError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

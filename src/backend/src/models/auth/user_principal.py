@@ -8,7 +8,6 @@ from pydantic import BaseModel
 # exp	Expiration Time	When the token expires
 # nbf	Not Before	Token is invalid before this time
 # iat	Issued At	When the token was created
-# jti	JWT ID	Unique token identifier
 
 
 class Principal(BaseModel):
@@ -19,4 +18,3 @@ class Principal(BaseModel):
     expiration: int
     issued_at: int
     not_before: int
-    jwt_id: str

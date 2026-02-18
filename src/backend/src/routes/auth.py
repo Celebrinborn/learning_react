@@ -11,3 +11,4 @@ router = APIRouter(tags=["Auth"])
 async def me(user: Principal = Security(authenticate)) -> Principal:
     """Return the currently authenticated user."""
     return user
+ 

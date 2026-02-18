@@ -25,9 +25,9 @@ class iAuthentication(ABC):
     """
 
     @abstractmethod
-    async def get_current_user(self, token: str) -> Principal:
+    async def authenticate(self, token: str) -> Principal:
         """
-        Validate credentials and return an authenticated Principal.
+        Decode and validate credentials, returning an authenticated Principal.
 
         Args:
             token: Raw JWT string.
