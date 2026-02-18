@@ -1,14 +1,23 @@
 {
+  // -------------------------
+  // Python Interpreter
+  // -------------------------
   "python.defaultInterpreterPath": "${workspaceFolder}/src/backend/env/Scripts/python.exe",
-  "python.analysis.extraPaths": ["${workspaceFolder}/src/backend"],
+
+  // -------------------------
+  // Python Analysis
+  // -------------------------
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/src/backend"
+  ],
   "python.analysis.autoSearchPaths": true,
   "python.analysis.diagnosticMode": "workspace",
   "python.analysis.useLibraryCodeForTypes": true,
 
-  // Disable Test Adapter Converter to prevent duplicate test discovery
+  // -------------------------
+  // Testing Configuration
+  // -------------------------
   "testExplorer.useNativeTesting": true,
-
-  // Python Testing Configuration
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
   "python.testing.pytestArgs": [
@@ -18,5 +27,25 @@
   ],
   "python.testing.cwd": "${workspaceFolder}/src/backend",
   "python.testing.autoTestDiscoverOnSaveEnabled": true,
-  "python.testing.pytestPath": "${workspaceFolder}/src/backend/env/Scripts/pytest.exe"
+  "python.testing.pytestPath": "${workspaceFolder}/src/backend/env/Scripts/pytest.exe",
+
+  // -------------------------
+  // Ruff Integration
+  // -------------------------
+
+  // Make Ruff the default formatter for Python
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+
+  // Ensure Ruff runs relative to backend (so it finds pyproject.toml)
+  "ruff.cwd": "${workspaceFolder}/src/backend",
+
+  // Auto-fix (includes import sorting) on save
+  "editor.codeActionsOnSave": {
+    "source.fixAll.ruff": true
+  },
+
+  // Optional: disable format-on-save if you only want Ruff to fix
+  "editor.formatOnSave": false
 }

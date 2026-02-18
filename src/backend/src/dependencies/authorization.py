@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Awaitable, Callable
 
 from fastapi import HTTPException, Security, status
@@ -10,8 +11,10 @@ from interfaces.auth import (
     AuthorizationError,
     iAuthorization,
 )
-from models.auth.user_principal import Principal
 from models import UserRole
+from models.auth.user_principal import Principal
+
+logger = logging.getLogger()
 
 # ---------------------------------------------------------------------------
 # FastAPI Dependency Type Definitions
@@ -63,19 +66,28 @@ def build_authorization_factory(
         principal: Principal = Security(require_cnf_roles([[UserRole("admin")]]))
     """
 
-    def require_cnf_roles(required_roles: list[list[UserRole]]) -> AuthorizationDependency:
+    def require_cnf_roles(
+        required_roles: list[list[UserRole]],
+    ) -> AuthorizationDependency:
         # This is intentionally a thin adapter that composes AuthN -> AuthZ.
         async def _checker(
             principal: Principal = Security(authenticate),
         ) -> Principal:
             try:
                 # If your authorizer enriches principal with roles, return that.
-                return await authorizer.required_cnf_roles(principal, required_roles)
+                result = await authorizer.required_cnf_roles(principal, required_roles)
+                logger.debug(f"Successfully authenticated {principal.subject}")
+                return result
             except AuthorizationError:
+                logger.warning(
+                    f"Authorization denied: {principal.subject} missing required "
+                    f"roles {required_roles}", stack_info=True
+                )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Forbidden",
                 )
 
         return _checker
+
     return require_cnf_roles

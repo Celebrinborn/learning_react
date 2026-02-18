@@ -20,6 +20,9 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.0.0",
     "httpx>=0.24.0",
+
+    # Ruff (lint + import sorting + formatter)
+    "ruff>=0.4.0",
 ]
 
 [tool.setuptools]
@@ -32,3 +35,24 @@ namespaces = false
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+# -------------------------
+# Ruff configuration
+# -------------------------
+
+[tool.ruff]
+# Match Black's default line length
+line-length = 88
+# Target your minimum Python version
+target-version = "py38"
+# Ruff will ignore files in .gitignore by default; this just makes it explicit if you want later
+respect-gitignore = true
+
+[tool.ruff.lint]
+# E,F: baseline correctness (pycodestyle + pyflakes)
+# I: import sorting (isort)
+select = ["E", "F", "I"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-sort-within-sections = true

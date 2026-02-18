@@ -18,7 +18,11 @@ class HardcodedAuthorizationProvider(iAuthorization):
     def __init__(self):
         self.valid_subs: dict[str, list[UserRole]] = {
             "JZOCNP0bu8U3ArC6m2SA5AEZZSKy4kFMQw7j1LZOcQE":
-                [UserRole.ADMIN, UserRole.DM, UserRole.PLAYER], # My personal test account, has all roles
+                [
+                    # UserRole.ADMIN, 
+                    UserRole.DM, 
+                    UserRole.PLAYER
+                ], # My personal test account, has all roles
         }
 
     async def _get_user_roles(self, user: Principal) -> list[UserRole]:
