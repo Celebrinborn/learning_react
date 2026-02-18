@@ -51,7 +51,7 @@ app.add_middleware(TraceResponseMiddleware)
 
 logger.info("Configuring CORS")
 # Configure CORS
-origins = os.getenv("CORS_ORIGINS", "https://cacolema-dnd-frontend.wonderfulcoast-e871ef79.westus2.azurecontainerapps.io").split(",")
+origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
 
 logger.info(f"Allowed CORS origins: {origins}")
 app.add_middleware(

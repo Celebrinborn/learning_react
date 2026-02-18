@@ -9,6 +9,7 @@ name: Build and Deploy to Azure
 #   BACKEND_APP           - Backend Container App name
 #   FRONTEND_APP          - Frontend Container App name
 #   BACKEND_URL           - Backend URL for nginx proxy (e.g. https://your-backend.azurecontainerapps.io)
+#   CORS_ORIGINS          - Comma-separated allowed origins (e.g. https://your-frontend.azurecontainerapps.io,https://your-custom-domain.com)
 
 on:
   push:
@@ -80,7 +81,8 @@ jobs:
           az containerapp update \
             --name ${{ env.BACKEND_APP }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
-            --image ${{ env.ACR_NAME }}.azurecr.io/dnd-backend:${{ github.sha }}
+            --image ${{ env.ACR_NAME }}.azurecr.io/dnd-backend:${{ github.sha }} \
+            --set-env-vars "CORS_ORIGINS=${{ vars.CORS_ORIGINS }}"
 
       - name: Debug BACKEND_URL (GitHub vars)
         run: |
