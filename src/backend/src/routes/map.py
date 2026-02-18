@@ -2,7 +2,6 @@ import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Security
-from opentelemetry import trace
 
 from builder import AppBuilder
 from dependencies import authenticate, require_cnf_roles
@@ -10,7 +9,6 @@ from models.auth.roles import UserRole
 from models.auth.user_principal import Principal
 from models.map import MapLocation, MapLocationCreate, MapLocationUpdate
 from storage.map import MapStorage
-from telemetry import get_tracer
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +16,6 @@ router = APIRouter(prefix="/api/map-locations", tags=["Map Locations"])
 
 _builder = AppBuilder()
 _map_storage = MapStorage(_builder.build_map_blob_storage())
-
-# @router.get("/me_is_dm")
-# async def me_is_dm(
-#     user: Principal = Security(authenticate),
-#     _: Principal = Security(require_cnf_roles([[UserRole.DM]]))
-# ) -> dict[str, bool]:
-#     """Check if the current user has DM role."""
-#     return {"is_dm": True}
 
 
 @router.post("", response_model=MapLocation, status_code=201)
@@ -36,14 +26,10 @@ async def create_location(
 ):
     """Create a new map location"""
     logger.info(f"Creating map location: {location.name} by {principal.subject}")
-    tracer = get_tracer()
-    with tracer.start_as_current_span("create_map_location_handler") as span:
-        span.set_attribute("location.name", location.name)
-        try:
-            return await _map_storage.create_map_location(location)
-        except ValueError as e:
-            span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
-            raise HTTPException(status_code=400, detail=str(e))
+    try:
+        return await _map_storage.create_map_location(location)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("", response_model=List[MapLocation])
@@ -56,17 +42,13 @@ async def list_locations(
     logger.info(
         f"Listing map locations with filter: map_id={map_id} by {principal.subject}"
     )
-    tracer = get_tracer()
-    with tracer.start_as_current_span("list_map_locations_handler") as span:
-        if map_id:
-            span.set_attribute("filter.map_id", map_id)
-        locations: list[MapLocation] = await _map_storage.get_all_map_locations(
-            map_id=map_id
-        )
-        logger.info(
-            f"Retrieved {len(locations)} map locationswith filter: map_id={map_id}"
-        )
-        return locations
+    locations: list[MapLocation] = await _map_storage.get_all_map_locations(
+        map_id=map_id
+    )
+    logger.info(
+        f"Retrieved {len(locations)} map locationswith filter: map_id={map_id}"
+    )
+    return locations
 
 
 @router.get("/{location_id}", response_model=MapLocation)
@@ -77,18 +59,12 @@ async def get_location(
 ):
     """Get a specific map location by ID"""
     logger.info(f"Getting map location with ID: {location_id} by {principal.subject}")
-    tracer = get_tracer()
-    with tracer.start_as_current_span("get_map_location_handler") as span:
-        span.set_attribute("location.id", location_id)
-        location = await _map_storage.get_map_location(location_id)
-        if not location:
-            span.set_status(
-                trace.Status(trace.StatusCode.ERROR, "Map location not found")
-            )
-            logger.warning(f"Map location with ID {location_id} not found")
-            raise HTTPException(status_code=404, detail="Map location not found")
-        logger.info(f"Map location with ID {location_id} retrieved successfully")
-        return location
+    location = await _map_storage.get_map_location(location_id)
+    if not location:
+        logger.warning(f"Map location with ID {location_id} not found")
+        raise HTTPException(status_code=404, detail="Map location not found")
+    logger.info(f"Map location with ID {location_id} retrieved successfully")
+    return location
 
 
 @router.put("/{location_id}", response_model=MapLocation)
@@ -100,26 +76,17 @@ async def update_location(
 ):
     """Update a map location"""
     logger.info(f"Updating map location with ID: {location_id} by {principal.subject}")
-    tracer = get_tracer()
-    with tracer.start_as_current_span("update_map_location_handler") as span:
-        span.set_attribute("location.id", location_id)
-        try:
-            location = await _map_storage.update_map_location(
-                location_id, location_data
+    try:
+        location = await _map_storage.update_map_location(location_id, location_data)
+        if not location:
+            logger.warning(
+                f"Map location with ID {location_id} not found for update"
             )
-            if not location:
-                span.set_status(
-                    trace.Status(trace.StatusCode.ERROR, "Map location not found")
-                )
-                logger.warning(
-                    f"Map location with ID {location_id} not found for update"
-                )
-                raise HTTPException(status_code=404, detail="Map location not found")
-            return location
-        except ValueError as e:
-            span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
-            logger.error(f"Error updating map location with ID {location_id}: {str(e)}")
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=404, detail="Map location not found")
+        return location
+    except ValueError as e:
+        logger.error(f"Error updating map location with ID {location_id}: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.delete("/{location_id}")
@@ -130,15 +97,9 @@ async def delete_location(
 ):
     """Delete a map location"""
     logger.info(f"Deleting map location with ID: {location_id} by {principal.subject}")
-    tracer = get_tracer()
-    with tracer.start_as_current_span("delete_map_location_handler") as span:
-        span.set_attribute("location.id", location_id)
-        success = await _map_storage.delete_map_location(location_id)
-        if not success:
-            span.set_status(
-                trace.Status(trace.StatusCode.ERROR, "Map location not found")
-            )
-            logger.warning(f"Map location with ID {location_id} not found for deletion")
-            raise HTTPException(status_code=404, detail="Map location not found")
-        logger.info(f"Map location with ID {location_id} deleted successfully")
-        return {"message": "Map location deleted successfully"}
+    success = await _map_storage.delete_map_location(location_id)
+    if not success:
+        logger.warning(f"Map location with ID {location_id} not found for deletion")
+        raise HTTPException(status_code=404, detail="Map location not found")
+    logger.info(f"Map location with ID {location_id} deleted successfully")
+    return {"message": "Map location deleted successfully"}

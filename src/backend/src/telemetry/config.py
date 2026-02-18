@@ -93,18 +93,24 @@ def setup_telemetry(service_name: str = "dnd-backend") -> None:
     # FastAPI auto-instrumentation will be done after app creation
 
 
+def _server_request_hook(span: trace.Span, scope: dict[str, Any]) -> None:
+    route = scope.get("route")
+    if route is not None:
+        method = scope.get("method", "HTTP")
+        span.update_name(f"{method} {route.path}")
+
+
 def instrument_fastapi(app: Any) -> None:
     """
     Instrument FastAPI application with OpenTelemetry.
-    Call this after FastAPI app is created.
-    Skips instrumentation if telemetry is disabled.
+    Call this after FastAPI app is created and routers are included.
+    Always runs regardless of whether export is enabled, so spans and
+    trace/span IDs are available in all environments.
 
     Args:
         app: FastAPI application instance
     """
-    if not _telemetry_enabled:
-        return
-    FastAPIInstrumentor.instrument_app(app)
+    FastAPIInstrumentor.instrument_app(app, server_request_hook=_server_request_hook)
 
 
 def get_tracer() -> trace.Tracer:
