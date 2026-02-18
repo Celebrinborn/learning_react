@@ -76,7 +76,7 @@ const CONFIGS: Record<Environment, AppConfig> = {
 
   prod: {
     env: "prod",
-    apiBaseUrl: "",
+    apiBaseUrl: "https://api.dnd.cameron.land",
     storage: {
       containerMaps: "maps",
       containerCharacters: "characters",
