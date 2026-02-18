@@ -1,5 +1,4 @@
-from fastapi import Depends, FastAPI
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import FastAPI, Security
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import logging
@@ -9,10 +8,8 @@ from telemetry import setup_telemetry
 from telemetry.config import instrument_fastapi
 from log_config import setup_logging
 from middleware import TraceResponseMiddleware
-from builder import AppBuilder
-from auth.dependencies import get_current_user
-from src.models.auth.user_principal import Principal
-from pydantic import BaseModel
+from dependencies import authenticate
+from models.auth.user_principal import Principal
 
 # Setup structured logging
 setup_logging()
@@ -47,12 +44,6 @@ app = FastAPI(
     version="1.0.0",
     openapi_tags=tags_metadata
 )
-
-logger.info("Configuring authentication and middleware")
-# Wire authentication
-_builder = AppBuilder()
-_auth_provider = _builder.build_auth_provider()
-app.dependency_overrides[get_current_user] = _auth_provider.dependency()
 
 logger.info("Adding middleware and routers")
 # Add trace response middleware (adds X-Trace-ID header to all responses)
@@ -95,7 +86,7 @@ async def health_check():
     return {"status": "healthy"}
 
 @app.get("/health_authenticated")
-async def health_check_authenticated(current_user: Principal = Depends(get_current_user)):
+async def health_check_authenticated(current_user: Principal = Security(authenticate)):
     """Authenticated health check endpoint"""
     logger.info(f"Authenticated health check accessed by user: {current_user.subject}")
     return {"status": "healthy", "user": current_user.subject}

@@ -4,12 +4,12 @@ from opentelemetry import trace
 
 from models.character import Character, CharacterCreate, CharacterUpdate
 from storage.character import CharacterStorage
-from builder import StorageBuilder
+from builder import AppBuilder
 from telemetry import get_tracer
 
 router = APIRouter(prefix="/api/characters", tags=["Characters"])
 
-_builder = StorageBuilder()
+_builder = AppBuilder()
 _character_storage = CharacterStorage(_builder.build_character_blob_storage())
 
 @router.post("", response_model=Character, status_code=201)

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from src.models.auth.user_principal import Principal
+from models.auth.user_principal import Principal
 from models import UserRole
 
 class AuthenticationError(Exception):
@@ -25,12 +25,12 @@ class iAuthentication(ABC):
     """
 
     @abstractmethod
-    def authenticate(self, raw_credentials: str) -> Principal:
+    async def get_current_user(self, token: str) -> Principal:
         """
         Validate credentials and return an authenticated Principal.
 
         Args:
-            raw_credentials: Token, API key, etc.
+            token: Raw JWT string.
 
         Returns:
             Principal: Authenticated identity.

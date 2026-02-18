@@ -3,13 +3,22 @@ Builder module for dependency injection.
 This is the only module that should be aware of concrete provider implementations.
 All other modules should depend only on interfaces.
 """
+from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
+
 from config import get_config, AppConfig
 from interfaces.blob import IBlob
-from src.providers.local_file_blob_provider import LocalFileBlobProvider
-from src.providers.azure_blob_provider import AzureBlobProvider
-from src.providers.auth.authentication_provider import EntraAuthProvider
+from interfaces.auth.auth import iAuthentication, iAuthorization
+from providers.local_file_blob_provider import LocalFileBlobProvider
+from providers.azure_blob_provider import AzureBlobProvider
+from providers.auth.authentication_provider import EntraAuthProvider
+from providers.auth.authorization_provider import HardcodedAuthorizationProvider
+
+if TYPE_CHECKING:
+    from dependencies.authentication import AuthenticationDependency
+    from dependencies.authorization import AuthorizationFactory
 
 
 class AppBuilder:
@@ -136,7 +145,32 @@ class AppBuilder:
 
         homebrew_path = self.base_data_path / self.storage_config["azure_prefix_homebrew"]
         return LocalFileBlobProvider(homebrew_path)
+    
+    def build_authentication_dependency(self) -> AuthenticationDependency:
+        """
+        Build the FastAPI authentication dependency.
+        """
+        from dependencies.authentication import build_authentication_dependency
+        authentication_provider: iAuthentication = self.build_auth_provider()
+        return build_authentication_dependency(
+            authenticator=authentication_provider
+        )
 
+    def build_authorization_service(self) -> iAuthorization:
+        """
+        Build the authorization service implementation.
+        """
+        return HardcodedAuthorizationProvider()
 
-# Backward-compatible alias
-StorageBuilder = AppBuilder
+    def build_require_cnf_roles(self) -> AuthorizationFactory:
+        """
+        Build the authorization dependency factory used by routes.
+        """
+        from dependencies.authorization import build_authorization_factory
+        authenticate = self.build_authentication_dependency()
+        authorizer = self.build_authorization_service()
+
+        return build_authorization_factory(
+            authorizer=authorizer,
+            authenticate=authenticate,
+        )

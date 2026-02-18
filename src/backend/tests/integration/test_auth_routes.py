@@ -8,17 +8,18 @@ Tests the /me endpoint at the HTTP boundary:
 - Existing unprotected routes still work
 """
 import pytest
-from unittest.mock import AsyncMock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 import jwt
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from datetime import datetime, timedelta, timezone
+import uuid
 
 from routes.auth import router as auth_router
-from auth.providers.entra import EntraAuthProvider
-from auth.dependencies import get_current_user
+from providers.auth.authentication_provider import EntraAuthProvider
+from dependencies import authenticate
+from dependencies.authentication import build_authentication_dependency
 
 
 TEST_ISSUER = "https://test.ciamlogin.com/test-tenant/v2.0"
@@ -55,6 +56,8 @@ def make_token(private_pem: bytes, **claims_override: str | int) -> str:
         "aud": TEST_AUDIENCE,
         "iat": int(now.timestamp()),
         "exp": int((now + timedelta(hours=1)).timestamp()),
+        "nbf": int(now.timestamp()),
+        "jti": str(uuid.uuid4()),
         "scp": "access_as_user",
     }
     claims.update(claims_override)
@@ -70,7 +73,7 @@ def auth_provider(test_keys):
         audience=TEST_AUDIENCE,
         jwks_url="https://test.example.com/keys",
     )
-    provider.load_pem(public_pem)
+    provider._load_pem(public_pem)
     return provider
 
 
@@ -79,7 +82,9 @@ def app(auth_provider):
     """Create a FastAPI app with auth routes using the test auth provider."""
     app = FastAPI()
     app.include_router(auth_router)
-    app.dependency_overrides[get_current_user] = auth_provider.dependency()
+    app.dependency_overrides[authenticate] = build_authentication_dependency(
+        authenticator=auth_provider
+    )
     return app
 
 

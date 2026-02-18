@@ -5,14 +5,14 @@ from opentelemetry import trace
 
 from models.map import MapLocation, MapLocationCreate, MapLocationUpdate
 from storage.map import MapStorage
-from builder import StorageBuilder
+from builder import AppBuilder
 from telemetry import get_tracer
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/map-locations", tags=["Map Locations"])
 
-_builder = StorageBuilder()
+_builder = AppBuilder()
 _map_storage = MapStorage(_builder.build_map_blob_storage())
 
 

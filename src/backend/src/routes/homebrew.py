@@ -4,13 +4,13 @@ from opentelemetry import trace
 
 from models.homebrew import HomebrewDocument, HomebrewDocumentSummary, HomebrewTreeNode
 from storage.homebrew import HomebrewStorage
-from builder import StorageBuilder
+from builder import AppBuilder
 from telemetry import get_tracer
 
 router = APIRouter(prefix="/api/homebrew", tags=["Homebrew"])
 
 # Create storage instance at module load
-_builder = StorageBuilder()
+_builder = AppBuilder()
 _homebrew_storage = HomebrewStorage(_builder.build_homebrew_blob_storage())
 
 

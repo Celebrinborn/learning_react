@@ -1,6 +1,6 @@
 """Unit tests for auth provider building in AppBuilder."""
 from builder import AppBuilder
-from auth.providers.entra import EntraAuthProvider
+from providers.auth.authentication_provider import EntraAuthProvider
 
 
 class TestBuildAuthProvider:
