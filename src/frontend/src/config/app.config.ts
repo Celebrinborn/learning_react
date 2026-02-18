@@ -76,7 +76,7 @@ const CONFIGS: Record<Environment, AppConfig> = {
 
   prod: {
     env: "prod",
-    apiBaseUrl: "/api",
+    apiBaseUrl: "",
     storage: {
       containerMaps: "maps",
       containerCharacters: "characters",

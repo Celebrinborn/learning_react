@@ -22,7 +22,7 @@ _map_storage = MapStorage(_builder.build_map_blob_storage())
 async def create_location(
     location: MapLocationCreate,
     principal: Principal = Security(authenticate),
-    _: Principal = Security(require_cnf_roles([[UserRole.DM]])),
+    _: Principal = Security(require_cnf_roles([[UserRole.DM, UserRole.ADMIN]])),
 ):
     """Create a new map location"""
     logger.info(f"Creating map location: {location.name} by {principal.subject}")
@@ -36,7 +36,7 @@ async def create_location(
 async def list_locations(
     map_id: Optional[str] = None,
     principal: Principal = Security(authenticate),
-    _: Principal = Security(require_cnf_roles([[UserRole.DM]])),
+    _: Principal = Security(require_cnf_roles([[UserRole.DM, UserRole.ADMIN]])),
 ):
     """Get all map locations, optionally filtered by map_id"""
     logger.info(
@@ -55,7 +55,7 @@ async def list_locations(
 async def get_location(
     location_id: str,
     principal: Principal = Security(authenticate),
-    _: Principal = Security(require_cnf_roles([[UserRole.DM]])),
+    _: Principal = Security(require_cnf_roles([[UserRole.DM, UserRole.ADMIN]])),
 ):
     """Get a specific map location by ID"""
     logger.info(f"Getting map location with ID: {location_id} by {principal.subject}")
@@ -72,7 +72,7 @@ async def update_location(
     location_id: str,
     location_data: MapLocationUpdate,
     principal: Principal = Security(authenticate),
-    _: Principal = Security(require_cnf_roles([[UserRole.DM]])),
+    _: Principal = Security(require_cnf_roles([[UserRole.DM, UserRole.ADMIN]])),
 ):
     """Update a map location"""
     logger.info(f"Updating map location with ID: {location_id} by {principal.subject}")
@@ -93,7 +93,7 @@ async def update_location(
 async def delete_location(
     location_id: str,
     principal: Principal = Security(authenticate),
-    _: Principal = Security(require_cnf_roles([[UserRole.DM]])),
+    _: Principal = Security(require_cnf_roles([[UserRole.DM, UserRole.ADMIN]])),
 ):
     """Delete a map location"""
     logger.info(f"Deleting map location with ID: {location_id} by {principal.subject}")
