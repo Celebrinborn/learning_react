@@ -1,9 +1,12 @@
-from typing import List
-from azure.storage.blob import BlobServiceClient, ContainerClient
-from azure.identity import DefaultAzureCredential
-from azure.core.exceptions import ResourceNotFoundError
-from interfaces.blob import IBlob
 import logging
+from typing import List
+
+from azure.core.exceptions import ResourceNotFoundError
+from azure.identity import DefaultAzureCredential
+from azure.storage.blob import BlobServiceClient, ContainerClient
+
+from interfaces.blob import IBlob
+
 logger = logging.getLogger(__name__)
 
 class AzureBlobProvider(IBlob):
@@ -98,8 +101,6 @@ class AzureBlobProvider(IBlob):
             data: Binary data to write
         """
         blob_client = self.container_client.get_blob_client(self._full_path(path))
-        logger.error("Write operation not implemented: Authentication Not Yet Implemented")
-        raise NotImplementedError("Authentication Not Yet Implemented")
         blob_client.upload_blob(data, overwrite=True)
 
     async def delete(self, path: str) -> None:
@@ -112,8 +113,6 @@ class AzureBlobProvider(IBlob):
         Raises:
             FileNotFoundError: If the blob doesn't exist
         """
-        logger.error("Delete operation not implemented: Authentication Not Yet Implemented")
-        raise NotImplementedError("Authentication Not Yet Implemented")
         try:
             blob_client = self.container_client.get_blob_client(self._full_path(path))
             blob_client.delete_blob()
