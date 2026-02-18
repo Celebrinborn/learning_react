@@ -84,3 +84,16 @@ class iAuthorization(ABC):
             AuthorizationError: If access should be denied.
         """
         raise NotImplementedError
+
+    @abstractmethod
+    async def get_roles(self, principal: Principal) -> list[UserRole]:
+        """
+        Return the roles assigned to the given principal.
+
+        Args:
+            principal: Authenticated identity.
+
+        Returns:
+            List of roles assigned to the principal. Empty list if none.
+        """
+        raise NotImplementedError

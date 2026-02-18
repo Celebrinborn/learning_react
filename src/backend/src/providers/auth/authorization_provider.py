@@ -60,3 +60,7 @@ class HardcodedAuthorizationProvider(iAuthorization):
                 logger.warning(f"User {principal.subject} lacks required roles: {role_set}")
                 raise AuthorizationError(f"User {principal.subject} lacks required roles: {role_set}")
         return principal
+
+    async def get_roles(self, principal: Principal) -> list[UserRole]:
+        """Return the roles assigned to the given principal."""
+        return await self._get_user_roles(principal)

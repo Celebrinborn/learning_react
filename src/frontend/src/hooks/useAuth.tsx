@@ -1,12 +1,14 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { MsalProvider, useMsal } from '@azure/msal-react';
 import { getMsalInstance } from '../auth/msalInstance';
+import { apiClient } from '../services/apiClient';
 
 export interface User {
   id: string;
   name: string;
   email: string;
+  roles: string[];
 }
 
 interface AuthContextType {
@@ -20,14 +22,30 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function EntraAuthProvider({ children }: { children: ReactNode }) {
   const { instance, accounts, inProgress } = useMsal();
+  const [roles, setRoles] = useState<string[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(false);
 
   const account = instance.getActiveAccount() ?? accounts[0] ?? null;
+
+  useEffect(() => {
+    if (!account) {
+      setRoles([]);
+      return;
+    }
+    setRolesLoading(true);
+    apiClient.fetch('/me/roles')
+      .then(res => res.json() as Promise<{ roles: string[] }>)
+      .then(data => setRoles(data.roles))
+      .catch(() => setRoles([]))
+      .finally(() => setRolesLoading(false));
+  }, [account?.localAccountId]);
 
   const user: User | null = account
     ? {
         id: account.localAccountId,
         name: account.name ?? account.username,
         email: account.username,
+        roles,
       }
     : null;
 
@@ -45,7 +63,7 @@ function EntraAuthProvider({ children }: { children: ReactNode }) {
         user,
         login,
         logout,
-        isLoading: inProgress !== 'none',
+        isLoading: inProgress !== 'none' || rolesLoading,
       }}
     >
       {children}

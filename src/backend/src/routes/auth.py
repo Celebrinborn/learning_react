@@ -1,7 +1,7 @@
 """Auth routes."""
-from fastapi import APIRouter, Security
+from fastapi import APIRouter, Depends, Security
 
-from dependencies import authenticate, require_cnf_roles
+from dependencies import authenticate, require_cnf_roles, get_user_roles
 from models.auth.roles import UserRole
 from models.auth.user_principal import Principal
 
@@ -12,6 +12,12 @@ router = APIRouter(tags=["Auth"])
 async def me(user: Principal = Security(authenticate)) -> Principal:
     """Return the currently authenticated user."""
     return user
+
+@router.get("/me/roles")
+async def me_roles(roles: list[UserRole] = Depends(get_user_roles)) -> dict[str, list[str]]:
+    """Return the roles assigned to the current user."""
+    return {"roles": [r.value for r in roles]}
+
 
 @router.get("/me_is_admin")
 async def me_is_admin(

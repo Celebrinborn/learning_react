@@ -83,6 +83,10 @@ export default function TopNav() {
   const { user, logout } = useAuth();
   const styles = useStyles();
 
+  const visibleLinks = navigationLinks.filter(link =>
+    !link.requiredRoles || link.requiredRoles.some(r => user?.roles.includes(r))
+  );
+
   return (
     <header className={styles.header}>
       <nav className={styles.nav}>
@@ -90,7 +94,7 @@ export default function TopNav() {
           <NavLink to="/">
             <img src={logoDragon} alt="Logo" className={styles.logo} />
           </NavLink>
-          {navigationLinks.map((link) => {
+          {visibleLinks.map((link) => {
             // Dynamic homebrew dropdown
             if (link.path === '/homebrew') {
               return <HomebrewMenu key={link.path} triggerClassName={styles.menuTrigger} />;

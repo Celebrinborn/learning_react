@@ -2,19 +2,22 @@ export interface NavLink {
   path: string;
   label: string;
   children?: NavLink[];  // For dropdown menus
+  requiredRoles?: string[];  // If set, only users with at least one matching role can see this link
 }
 
 export const navigationLinks: NavLink[] = [
-  { 
-    path: '/player', 
+  {
+    path: '/player',
     label: 'Player',
+    requiredRoles: ['player', 'dm'],
     children: [
       { path: '/character_creator', label: 'Character Creator' },
     ]
   },
-  { 
-    path: '/dm', 
+  {
+    path: '/dm',
     label: 'DM',
+    requiredRoles: ['dm'],
     children: [
       { path: '/encounter_builder', label: 'Encounter Builder' },
       { path: '/encounter_player', label: 'Encounter Player' },

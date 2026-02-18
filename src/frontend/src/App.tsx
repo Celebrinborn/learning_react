@@ -3,6 +3,7 @@ import { FluentProvider, webDarkTheme } from '@fluentui/react-components';
 import { useEffect } from 'react';
 import { getTracer } from './telemetry';
 import MainLayout from './components/layout/MainLayout';
+import ProtectedRoute from './components/layout/ProtectedRoute';
 import Home from './pages/Home';
 import CharacterCreator from './pages/CharacterCreator';
 import Campaign from './pages/Campaign';
@@ -40,12 +41,12 @@ export default function App() {
           {/* Routes with layout (includes TopNav) */}
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Home />} />
-            <Route path="character_creator" element={<CharacterCreator />} />
+            <Route path="character_creator" element={<ProtectedRoute allowedRoles={['player', 'dm']}><CharacterCreator /></ProtectedRoute>} />
             <Route path="campaign" element={<Campaign />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="encounter_builder" element={<EncounterBuilder />} />
-            <Route path="encounter_player" element={<EncounterPlayer />} />
-            <Route path="map" element={<Map />} />
+            <Route path="settings" element={<ProtectedRoute allowedRoles={['dm']}><Settings /></ProtectedRoute>} />
+            <Route path="encounter_builder" element={<ProtectedRoute allowedRoles={['dm']}><EncounterBuilder /></ProtectedRoute>} />
+            <Route path="encounter_player" element={<ProtectedRoute allowedRoles={['dm']}><EncounterPlayer /></ProtectedRoute>} />
+            <Route path="map" element={<ProtectedRoute allowedRoles={['dm']}><Map /></ProtectedRoute>} />
             <Route path="homebrew/*" element={<Homebrew />} />
             <Route path="*" element={<NotFound />} />
           </Route>

@@ -18,7 +18,7 @@ from providers.auth.authorization_provider import HardcodedAuthorizationProvider
 
 if TYPE_CHECKING:
     from dependencies.authentication import AuthenticationDependency
-    from dependencies.authorization import AuthorizationFactory
+    from dependencies.authorization import AuthorizationFactory, GetRolesDependency
 
 
 class AppBuilder:
@@ -171,6 +171,19 @@ class AppBuilder:
         authorizer = self.build_authorization_service()
 
         return build_authorization_factory(
+            authorizer=authorizer,
+            authenticate=authenticate,
+        )
+
+    def build_get_roles_dependency(self) -> GetRolesDependency:
+        """
+        Build a FastAPI dependency that returns the roles for the authenticated principal.
+        """
+        from dependencies.authorization import build_get_roles_dependency
+        authenticate = self.build_authentication_dependency()
+        authorizer = self.build_authorization_service()
+
+        return build_get_roles_dependency(
             authorizer=authorizer,
             authenticate=authenticate,
         )

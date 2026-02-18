@@ -49,6 +49,9 @@ AuthorizationDependency = Callable[..., Awaitable[Principal]]
 #     principal: Principal = Security(require_roles([[UserRole("admin")]]))
 AuthorizationFactory = Callable[[list[list[UserRole]]], AuthorizationDependency]
 
+# A dependency that returns the list of roles for the authenticated principal.
+GetRolesDependency = Callable[..., Awaitable[list[UserRole]]]
+
 
 def build_authorization_factory(
     *,
@@ -91,3 +94,20 @@ def build_authorization_factory(
         return _checker
 
     return require_cnf_roles
+
+
+def build_get_roles_dependency(
+    *,
+    authorizer: iAuthorization,
+    authenticate: AuthenticationDependency,
+) -> GetRolesDependency:
+    """
+    Build a FastAPI dependency that returns the authenticated principal's roles.
+    """
+
+    async def get_roles(
+        principal: Principal = Security(authenticate),
+    ) -> list[UserRole]:
+        return await authorizer.get_roles(principal)
+
+    return get_roles
