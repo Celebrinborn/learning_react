@@ -14,7 +14,7 @@ from interfaces.auth.auth import iAuthentication, iAuthorization
 from providers.local_file_blob_provider import LocalFileBlobProvider
 from providers.azure_blob_provider import AzureBlobProvider
 from providers.auth.authentication_provider import EntraAuthProvider
-from providers.auth.authorization_provider import HardcodedAuthorizationProvider
+from providers.auth.authorization_provider import BlobAuthorizationProvider
 
 if TYPE_CHECKING:
     from dependencies.authentication import AuthenticationDependency
@@ -160,7 +160,8 @@ class AppBuilder:
         """
         Build the authorization service implementation.
         """
-        return HardcodedAuthorizationProvider()
+        blob = self.build_user_blob_storage()
+        return BlobAuthorizationProvider(blob)
 
     def build_require_cnf_roles(self) -> AuthorizationFactory:
         """

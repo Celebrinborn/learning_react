@@ -7,24 +7,25 @@ Tests the /me endpoint at the HTTP boundary:
 - Valid token -> 200 with user info
 - Existing unprotected routes still work
 """
-import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-import jwt
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
 from datetime import datetime, timedelta, timezone
 import uuid
 
-from routes.auth import router as auth_router
-from providers.auth.authentication_provider import EntraAuthProvider
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+import jwt
+import pytest
+
 from dependencies import authenticate
 from dependencies.authentication import build_authentication_dependency
-
+from providers.auth.authentication_provider import EntraAuthProvider
+from routes.auth import router as auth_router
 
 TEST_ISSUER = "https://test.ciamlogin.com/test-tenant/v2.0"
 TEST_AUDIENCE = "api://test-api"
 TEST_SUBJECT = "test-user-id-123"
+TEST_OID = "00000000-0000-0000-0000-000000000001"
 
 
 @pytest.fixture(scope="module")
@@ -51,6 +52,7 @@ def make_token(private_pem: bytes, **claims_override: str | int) -> str:
     """Create a signed JWT with the given claims."""
     now = datetime.now(timezone.utc)
     claims: dict[str, str | int] = {
+        "oid": TEST_OID,
         "sub": TEST_SUBJECT,
         "iss": TEST_ISSUER,
         "aud": TEST_AUDIENCE,
@@ -146,7 +148,7 @@ class TestMeEndpoint:
         response = client.get("/me", headers={"Authorization": f"Bearer {token}"})
         assert response.status_code == 200
         data = response.json()
-        assert data["subject"] == TEST_SUBJECT
+        assert data["entra_object_id"] == TEST_OID
 
 
 class TestExistingRoutes:

@@ -59,6 +59,8 @@ class EntraAuthProvider(iAuthentication):
             expiration=payload["exp"],
             issued_at=payload["iat"],
             not_before=payload["nbf"],
+            name=payload.get("name"),
+            prefered_username=payload.get("preferred_username")
         )
         return principal
 

@@ -1,4 +1,6 @@
 """Auth domain models."""
+from typing import Optional
+
 from pydantic import BaseModel
 
 # Abbrev	Full Name	Meaning
@@ -19,3 +21,6 @@ class Principal(BaseModel):
     expiration: int
     issued_at: int
     not_before: int
+    # -- optional fields
+    name: Optional[str]
+    prefered_username: Optional[str]
