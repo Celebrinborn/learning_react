@@ -1,15 +1,16 @@
+import logging
+import os
+
 from fastapi import FastAPI, Security
 from fastapi.middleware.cors import CORSMiddleware
-import os
-import logging
 
-from routes import map_router, character_router, homebrew_router, auth_router
-from telemetry import setup_telemetry
-from telemetry.config import instrument_fastapi
+from dependencies import authenticate
 from log_config import setup_logging
 from middleware import TraceResponseMiddleware
-from dependencies import authenticate
 from models.auth.user_principal import Principal
+from routes import auth_router, character_router, homebrew_router, map_router
+from telemetry import setup_telemetry
+from telemetry.config import instrument_fastapi
 
 # Setup structured logging
 setup_logging()
@@ -88,8 +89,8 @@ async def health_check():
 @app.get("/health_authenticated")
 async def health_check_authenticated(current_user: Principal = Security(authenticate)):
     """Authenticated health check endpoint"""
-    logger.info(f"Authenticated health check accessed by user: {current_user.subject}")
-    return {"status": "healthy", "user": current_user.subject}
+    logger.info(f"Authenticated health check accessed by user: {current_user.entra_object_id}")
+    return {"status": "healthy", "user": current_user.entra_object_id}
 
 if __name__ == "__main__":
     logger.info("Running application with Uvicorn")

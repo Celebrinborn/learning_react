@@ -13,6 +13,7 @@ from pydantic import BaseModel
 class Principal(BaseModel):
     """Authenticated user identity extracted from a validated token."""
     subject: str
+    entra_object_id: str
     issuer: str
     audience: str
     expiration: int

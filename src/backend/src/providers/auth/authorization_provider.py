@@ -1,9 +1,9 @@
-from models import UserRole
-from interfaces.auth import iAuthorization
-from models.auth.user_principal import Principal
 import logging
 
+from interfaces.auth import iAuthorization
 from interfaces.auth.auth import AuthorizationError
+from models import UserRole
+from models.auth.user_principal import Principal
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,8 @@ class HardcodedAuthorizationProvider(iAuthorization):
     """
 
     def __init__(self):
-        self.valid_subs: dict[str, list[UserRole]] = {
-            "JZOCNP0bu8U3ArC6m2SA5AEZZSKy4kFMQw7j1LZOcQE":
+        self.valid_oids: dict[str, list[UserRole]] = {
+            "25edd424-4428-4952-80e1-9e0a3fe718a6":
                 [
                     # UserRole.ADMIN, 
                     UserRole.DM, 
@@ -27,12 +27,12 @@ class HardcodedAuthorizationProvider(iAuthorization):
 
     async def _get_user_roles(self, user: Principal) -> list[UserRole]:
         """Get the roles for a given user."""
-        logger.debug(f"Getting roles for user: {user.subject}")
-        if user.subject in self.valid_subs:
-            logger.info(f"User {user.subject} has roles: {self.valid_subs[user.subject]}")
-            return self.valid_subs[user.subject]
+        logger.debug(f"Getting roles for user: {user.entra_object_id}")
+        if user.entra_object_id in self.valid_oids:
+            logger.info(f"User {user.entra_object_id} has roles: {self.valid_oids[user.entra_object_id]}")
+            return self.valid_oids[user.entra_object_id]
         else:
-            logger.warning(f"Unauthorized access attempt by sub: {user.subject}")
+            logger.warning(f"Unauthorized access attempt by sub: {user.entra_object_id}")
             return []
     async def required_cnf_roles(
         self,

@@ -3,8 +3,9 @@
 Validates JWT access tokens issued by Microsoft Entra External ID (CIAM).
 Uses PyJWT for token decoding and signature verification.
 """
-from typing import Any
 import logging
+from typing import Any
+
 import jwt
 from jwt import PyJWKClient
 
@@ -52,6 +53,7 @@ class EntraAuthProvider(iAuthentication):
         )
         principal = Principal(
             subject=payload["sub"],
+            entra_object_id=payload["oid"],
             issuer=payload["iss"],
             audience=payload["aud"],
             expiration=payload["exp"],
