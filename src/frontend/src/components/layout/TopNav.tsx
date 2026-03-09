@@ -3,6 +3,8 @@ import { makeStyles, tokens, Button, Menu, MenuTrigger, MenuPopover, MenuList, M
 import { useAuth } from '../../hooks/useAuth';
 import { navigationLinks } from '../../config/navigation';
 import logoDragon from '../../assets/Logo_dragon.png';
+import logoAsleep from '../../assets/Logo_dragon_asleep.png';
+import { useBackendHealth } from '../../hooks/useBackendHealth';
 import HomebrewMenu from './HomebrewMenu';
 
 const useStyles = makeStyles({
@@ -81,6 +83,7 @@ const useStyles = makeStyles({
 
 export default function TopNav() {
   const { user, logout } = useAuth();
+  const { isHealthy } = useBackendHealth();
   const styles = useStyles();
 
   const visibleLinks = navigationLinks.filter(link =>
@@ -92,7 +95,7 @@ export default function TopNav() {
       <nav className={styles.nav}>
         <div className={styles.navLinks}>
           <NavLink to="/">
-            <img src={logoDragon} alt="Logo" className={styles.logo} />
+            <img src={isHealthy ? logoDragon : logoAsleep} alt={isHealthy ? 'Logo' : 'Backend loading...'} className={styles.logo} />
           </NavLink>
           {visibleLinks.map((link) => {
             // Dynamic homebrew dropdown

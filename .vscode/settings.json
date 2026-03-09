@@ -43,7 +43,7 @@
 
   // Auto-fix (includes import sorting) on save
   "editor.codeActionsOnSave": {
-    "source.fixAll.ruff": true
+    "source.fixAll.ruff": "explicit"
   },
 
   // Optional: disable format-on-save if you only want Ruff to fix

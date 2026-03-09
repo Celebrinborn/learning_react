@@ -36,9 +36,13 @@ vi.mock('../config/navigation', () => ({
   ],
 }));
 
-// Mock logo import
-vi.mock('../assets/Logo_dragon.png', () => ({
-  default: 'mocked-logo.png',
+// Mock logo imports
+vi.mock('../assets/Logo_dragon.png', () => ({ default: 'mocked-logo.png' }));
+vi.mock('../assets/Logo_dragon_asleep.png', () => ({ default: 'mocked-logo-asleep.png' }));
+
+// Mock health hook — default to healthy so existing tests keep passing
+vi.mock('../hooks/useBackendHealth', () => ({
+  useBackendHealth: () => ({ isHealthy: true }),
 }));
 
 const renderWithProviders = (component: React.ReactElement) => {
