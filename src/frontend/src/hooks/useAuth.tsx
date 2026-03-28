@@ -22,25 +22,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function EntraAuthProvider({ children }: { children: ReactNode }) {
   const { instance, accounts, inProgress } = useMsal();
-  const [roles, setRoles] = useState<string[]>([]);
-  const [rolesLoading, setRolesLoading] = useState(false);
+  const [roles, setRoles] = useState<string[] | null>(null);
 
   const account = instance.getActiveAccount() ?? accounts[0] ?? null;
 
   useEffect(() => {
     if (!account) {
-      setRoles([]);
+      setRoles(null);
       return;
     }
-    setRolesLoading(true);
+    setRoles(null);
+
     apiClient.fetch('/me/roles')
       .then(res => res.json() as Promise<{ roles: string[] }>)
       .then(data => setRoles(data.roles))
       .catch(() => setRoles([]))
-      .finally(() => setRolesLoading(false));
   }, [account?.localAccountId]);
 
-  const user: User | null = account
+  const user: User | null = account && roles !== null
     ? {
         id: account.localAccountId,
         name: account.name ?? account.username,
@@ -48,6 +47,8 @@ function EntraAuthProvider({ children }: { children: ReactNode }) {
         roles,
       }
     : null;
+
+  const isLoading = inProgress !== 'none' || (account !== null && roles === null);
 
   const login = async () => {
     // handled via redirect on Login page
@@ -63,7 +64,7 @@ function EntraAuthProvider({ children }: { children: ReactNode }) {
         user,
         login,
         logout,
-        isLoading: inProgress !== 'none' || rolesLoading,
+        isLoading,
       }}
     >
       {children}
