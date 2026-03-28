@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, LayersControl } from 'react-leaflet';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker, Popup, LayersControl, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Icon } from 'leaflet';
 import { Button, Spinner } from '@fluentui/react-components';
@@ -18,7 +19,21 @@ import HexGridLayer from '../components/map/HexGridLayer';
 import ZoomDisplay from '../components/map/ZoomDisplay';
 import MeasureTool from '../components/map/MeasureTool';
 import { LocationTypeIcons } from '../types/locationType';
+import { hexToLatLng, isValidHexCoordinate } from '../utils/hexUtils';
 import L from 'leaflet';
+
+/** Applies the target view the first time it becomes non-null. */
+function InitialView({ target }: { target: { lat: number; lng: number; z?: number } | null }) {
+  const map = useMap();
+  const applied = useRef(false);
+  useEffect(() => {
+    if (target && !applied.current) {
+      applied.current = true;
+      map.setView([target.lat, target.lng], target.z ?? map.getZoom());
+    }
+  }, [map, target]);
+  return null;
+}
 
 const defaultIcon = new Icon({
   iconUrl: markerIcon,
@@ -41,9 +56,54 @@ const createCustomIcon = (emoji: string) => {
   });
 };
 
+function parseInitialView(
+  searchParams: URLSearchParams,
+  locations: MapLocation[]
+): { lat: number; lng: number; z?: number } | null {
+  const zRaw = searchParams.get('z');
+  const z = zRaw !== null ? parseInt(zRaw, 10) : undefined;
+
+  const id = searchParams.get('id');
+  if (id) {
+    const found = locations.find(loc => loc.id === id);
+    if (found) return { lat: found.latitude, lng: found.longitude, z };
+    return null;
+  }
+
+  const latRaw = searchParams.get('lat');
+  const lngRaw = searchParams.get('lng');
+  if (latRaw !== null && lngRaw !== null) {
+    const lat = parseFloat(latRaw);
+    const lng = parseFloat(lngRaw);
+    if (!isNaN(lat) && !isNaN(lng)) return { lat, lng, z };
+    return null;
+  }
+
+  const hexRaw = searchParams.get('hex');
+  if (hexRaw !== null) {
+    const parts = hexRaw.split(',').map(Number);
+    if (parts.length === 3 && parts.every(n => !isNaN(n))) {
+      const [q, r, s] = parts;
+      const hex = { q, r, s };
+      if (isValidHexCoordinate(hex)) {
+        const { lat, lng } = hexToLatLng(hex);
+        return { lat, lng, z };
+      }
+    }
+  }
+
+  return null;
+}
+
 export default function Map() {
   // Årdalsfjord, Vestland county, Norway
   const position: [number, number] = [61.23, 7.70];
+  const [searchParams] = useSearchParams();
+
+  // Resolve non-id targets immediately; id targets wait for locations to load
+  const [initialTarget, setInitialTarget] = useState<{ lat: number; lng: number; z?: number } | null>(
+    () => searchParams.get('id') ? null : parseInitialView(searchParams, [])
+  );
 
   const [locations, setLocations] = useState<MapLocation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +123,9 @@ export default function Map() {
       setLoading(true);
       const data = await mapLocationService.getAll();
       setLocations(data);
+      if (searchParams.get('id')) {
+        setInitialTarget(parseInitialView(searchParams, data));
+      }
     } catch (error) {
       console.error('Error loading locations:', error);
       alert(`Failed to load locations: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -194,6 +257,8 @@ export default function Map() {
               <HexGridLayer />
             </LayersControl.Overlay>
           </LayersControl>
+
+          <InitialView target={initialTarget} />
 
           <ZoomDisplay />
 
