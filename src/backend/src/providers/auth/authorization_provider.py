@@ -36,7 +36,7 @@ class HardcodedAuthorizationProvider(iAuthorization):
     """
 
     def __init__(self):
-        self.valid_oids: dict[str, list[UserRole]] = {
+        self.valid_subjects: dict[str, list[UserRole]] = {
             "25edd424-4428-4952-80e1-9e0a3fe718a6": [
                 # UserRole.ADMIN,
                 UserRole.DM,
@@ -46,16 +46,16 @@ class HardcodedAuthorizationProvider(iAuthorization):
 
     async def _get_user_roles(self, user: Principal) -> list[UserRole]:
         """Get the roles for a given user."""
-        logger.debug(f"Getting roles for user: {user.entra_object_id}")
-        if user.entra_object_id in self.valid_oids:
+        logger.debug(f"Getting roles for user: {user.subject}")
+        if user.subject in self.valid_subjects:
             logger.info(
-                f"User {user.entra_object_id} has roles: "
-                f"{self.valid_oids[user.entra_object_id]}"
+                f"User {user.subject} has roles: "
+                f"{self.valid_subjects[user.subject]}"
             )
-            return self.valid_oids[user.entra_object_id]
+            return self.valid_subjects[user.subject]
         else:
             logger.warning(
-                f"Unauthorized access attempt by sub: {user.entra_object_id}"
+                f"Unauthorized access attempt by sub: {user.subject}"
             )
             return []
 
@@ -113,13 +113,13 @@ class BlobAuthorizationProvider(iAuthorization):
 
     async def _get_user_roles(self, user: Principal) -> list[UserRole]:
         db = await self._load_users()
-        record = db.users.get(user.entra_object_id)
+        record = db.users.get(user.subject)
         if record is None:
             logger.warning(
-            f"Unauthorized access attempt by UNKNOWN oid: {user.entra_object_id}"
-        )
+                f"Unauthorized access attempt by UNKNOWN subject: {user.subject}"
+            )
             return []
-        logger.info(f"User {user.entra_object_id} has roles: {record.roles}")
+        logger.info(f"User {user.subject} has roles: {record.roles}")
         return record.roles
 
     async def required_cnf_roles(

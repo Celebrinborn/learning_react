@@ -22,13 +22,13 @@ import { LocationTypeIcons } from '../types/locationType';
 import { hexToLatLng, isValidHexCoordinate } from '../utils/hexUtils';
 import L from 'leaflet';
 
-/** Applies the target view the first time it becomes non-null. */
+/** Applies the target view once per map instance (handles StrictMode map recreation). */
 function InitialView({ target }: { target: { lat: number; lng: number; z?: number } | null }) {
   const map = useMap();
-  const applied = useRef(false);
+  const appliedTo = useRef<typeof map | null>(null);
   useEffect(() => {
-    if (target && !applied.current) {
-      applied.current = true;
+    if (target && appliedTo.current !== map) {
+      appliedTo.current = map;
       map.setView([target.lat, target.lng], target.z ?? map.getZoom());
     }
   }, [map, target]);

@@ -11,7 +11,7 @@ This document explains how authentication works in the DND Stats Sheet applicati
 1. [Architecture Overview](#1-architecture-overview)
 2. [Token Flow](#2-token-flow)
 3. [Key Identifiers](#3-key-identifiers)
-4. [Dual-Mode Authentication](#4-dual-mode-authentication)
+4. [Authentication Mode](#4-authentication-mode)
 5. [Build-Time vs Runtime Configuration](#5-build-time-vs-runtime-configuration)
 6. [Why Config Is Split Across Three Files](#6-why-config-is-split-across-three-files)
 7. [Backend Auth Architecture](#7-backend-auth-architecture)
@@ -157,32 +157,9 @@ These are public, non-secret values. They are safe to commit to source control.
 
 ---
 
-## 4. Dual-Mode Authentication
+## 4. Authentication Mode
 
-The system supports two auth modes, switched by environment variable.
-
-| Mode | Frontend | Backend | When |
-|---|---|---|---|
-| `local_fake` | Login form (any credentials), no token sent | Returns hardcoded dev user, no validation | Local development |
-| `entra_external_id` | MSAL redirect to Microsoft login, Bearer token on every call | Validates JWT (signature, issuer, audience, expiry) | Production, containers with real auth |
-
-### Switching modes
-
-| Layer | Environment Variable | Default (dev) | Default (prod) |
-|---|---|---|---|
-| Frontend | `VITE_AUTH_MODE` | `local_fake` | `entra_external_id` |
-| Backend | `AUTH_MODE` | `local_fake` | `entra_external_id` |
-
-To test real Entra auth locally, set both:
-- `VITE_AUTH_MODE=entra_external_id` (in `src/frontend/.env.local`)
-- `AUTH_MODE=entra_external_id` (shell env var or `.env` for backend)
-
-### How `local_fake` works
-
-- **Frontend**: Shows a username/password form. Accepts anything. Stores a mock token in `localStorage`. API calls are made without an `Authorization` header.
-- **Backend**: `LocalFakeAuthProvider` returns `UserPrincipal(subject="local-dev-user")` for every request. No token parsing or validation happens.
-
-This mode exists so developers can work without an internet connection or Azure account.
+The system currently supports a single auth mode, `entra_external_id`, selected via environment variable (`VITE_AUTH_MODE` on the frontend, `AUTH_MODE` on the backend). Both dev and prod configs use it -- there is no alternate mode implemented today.
 
 ### How `entra_external_id` works
 
@@ -203,7 +180,7 @@ All frontend configuration is resolved at build time:
 4. The resulting static files have no runtime configuration
 
 This means the **same source code produces different bundles** depending on build-time env vars:
-- `npm run start` (local dev) uses `.env.dev` → `local_fake` mode, `localhost` API
+- `npm run start` (local dev) uses `.env.dev` → `entra_external_id` mode, `localhost` API
 - Docker build with `APP_ENV=prod` → `entra_external_id` mode, relative `/api` URL
 
 ### Backend: runtime (environment variables)
@@ -295,10 +272,6 @@ auth/providers/base.py (IAuthProvider protocol)
   |
   |  def dependency() -> Callable  # returns a FastAPI dependency
   |
-  +---> auth/providers/local_fake.py
-  |       Returns UserPrincipal(subject="local-dev-user")
-  |       No token validation
-  |
   +---> auth/providers/entra.py
           Validates JWT with PyJWT
           Fetches JWKS from Entra (cached)
@@ -312,7 +285,6 @@ auth/providers/base.py (IAuthProvider protocol)
 | `src/backend/src/auth/models.py` | `UserPrincipal` model (just `subject: str`) |
 | `src/backend/src/auth/providers/base.py` | `IAuthProvider` protocol |
 | `src/backend/src/auth/providers/entra.py` | JWT validation against Entra JWKS |
-| `src/backend/src/auth/providers/local_fake.py` | Hardcoded dev user, no validation |
 | `src/backend/src/auth/dependencies.py` | `get_current_user` placeholder dependency |
 | `src/backend/src/builder.py` | `AppBuilder.build_auth_provider()` factory |
 | `src/backend/src/config.py` | Auth config (issuer, audience, JWKS URL) |
@@ -334,9 +306,9 @@ cd src/frontend
 npm run start    # alias for npm run dev
 ```
 - Reads `.env.dev` (via Vite config)
-- Auth mode: `local_fake` (default)
+- Auth mode: `entra_external_id`
 - API URL: `http://localhost:8000`
-- Login form accepts any credentials
+- Shows "Sign in with Microsoft"; `http://localhost:5173/` must be registered as a redirect URI in the Entra SPA app registration.
 
 **Backend**:
 ```bash
@@ -345,20 +317,8 @@ cd src/backend
 python -m uvicorn src.main:app --reload
 ```
 - `APP_ENV` defaults to `dev`
-- Auth mode: `local_fake` (default)
-- `/me` returns `{"subject": "local-dev-user"}` without any token
-
-**To test real Entra auth locally**:
-1. Add to `src/frontend/.env.local`:
-   ```
-   VITE_AUTH_MODE=entra_external_id
-   ```
-2. Set backend env var:
-   ```
-   AUTH_MODE=entra_external_id
-   ```
-3. Restart both. The frontend will show "Sign in with Microsoft" instead of the form.
-4. `http://localhost:5173/` must be registered as a redirect URI in the Entra SPA app registration.
+- Auth mode: `entra_external_id`
+- Validates tokens against Entra JWKS endpoint
 
 ### Local containers (Docker Compose)
 
@@ -368,15 +328,8 @@ docker compose -f .devcontainer/docker-compose.yml up
 ```
 
 - Backend runs on port 8000, frontend on port 5173
-- Both default to `APP_ENV=dev` / `local_fake`
+- Both default to `APP_ENV=dev`, auth mode `entra_external_id`
 - CORS configured for `http://localhost:5173`
-
-To use Entra auth in containers, add to `.devcontainer/docker-compose.yml` backend environment:
-```yaml
-environment:
-  - AUTH_MODE=entra_external_id
-```
-And set `VITE_AUTH_MODE=entra_external_id` for the frontend.
 
 ### Production (Azure Container Apps)
 
@@ -427,8 +380,3 @@ Check that `CORS_ORIGINS` in the backend includes the frontend origin:
 - Local: `http://localhost:5173`
 - Docker: `http://localhost:5173,http://frontend:5173`
 - Prod: the actual frontend domain
-
-### Local fake mode doesn't work
-
-- Verify both frontend (`VITE_AUTH_MODE`) and backend (`AUTH_MODE`) are set to `local_fake` (or unset, which defaults to `local_fake` in dev).
-- The frontend sends no `Authorization` header in this mode. If the backend is in `entra_external_id` mode, it will reject requests.

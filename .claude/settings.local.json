@@ -4,7 +4,10 @@
       "Bash(curl:*)",
       "Bash(python -m pytest:*)",
       "Bash(env/Scripts/activate)",
-      "Bash(pytest:*)"
+      "Bash(pytest:*)",
+      "Bash(docker version *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:18888/)",
+      "Bash(curl -s -D - -o /dev/null http://localhost:18888/)"
     ]
   }
 }

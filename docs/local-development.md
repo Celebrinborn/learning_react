@@ -114,6 +114,20 @@ npm run build
 
 Build output will be in `src/frontend/dist/`.
 
+## Telemetry (OpenTelemetry)
+
+The backend and frontend both export OpenTelemetry traces (disabled unless a local collector is running). For local development, start the Aspire Dashboard as the OTLP consumer:
+
+```powershell
+.\run-telemetry.ps1
+```
+
+Or use the "Run Otel Dashboard" VSCode task (included in "Run All (Backend + Frontend)").
+
+- Dashboard UI: `http://localhost:18888`
+- OTLP gRPC (backend): `localhost:4317`
+- OTLP HTTP (frontend): `http://localhost:4318/v1/traces`
+
 ## Data Directory
 
 The `./data/` directory stores all application data in local development:

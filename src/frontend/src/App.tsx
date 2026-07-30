@@ -14,6 +14,7 @@ import EncounterBuilder from './pages/EncounterBuilder';
 import EncounterPlayer from './pages/EncounterPlayer';
 import Map from './pages/Map';
 import Homebrew from './pages/Homebrew';
+import Me from './pages/Me';
 
 /**
  * Component to track route changes with OpenTelemetry
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="encounter_player" element={<ProtectedRoute allowedRoles={['dm']}><EncounterPlayer /></ProtectedRoute>} />
             <Route path="map" element={<ProtectedRoute allowedRoles={['dm']}><Map /></ProtectedRoute>} />
             <Route path="homebrew/*" element={<Homebrew />} />
+            <Route path="me" element={<ProtectedRoute allowedRoles={['admin', 'player', 'dm', 'guest']}><Me /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Route>
 

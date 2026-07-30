@@ -32,10 +32,26 @@
       }
     },
     {
+      "label": "Run Otel Dashboard",
+      "type": "shell",
+      "command": ".\\run-telemetry.ps1",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": false,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "dev"
+      }
+    },
+    {
       "label": "Run All (Backend + Frontend)",
       "dependsOn": [
         "Run Backend",
-        "Run Frontend"
+        "Run Frontend",
+        "Run Otel Dashboard"
       ],
       "problemMatcher": []
     }

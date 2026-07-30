@@ -89,8 +89,8 @@ async def health_check():
 @app.get("/health_authenticated")
 async def health_check_authenticated(current_user: Principal = Security(authenticate)):
     """Authenticated health check endpoint"""
-    logger.info(f"Authenticated health check accessed by user: {current_user.entra_object_id}")
-    return {"status": "healthy", "user": current_user.entra_object_id}
+    logger.info(f"Authenticated health check accessed by user: {current_user.subject}")
+    return {"status": "healthy", "user": current_user.subject}
 
 if __name__ == "__main__":
     logger.info("Running application with Uvicorn")

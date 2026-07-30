@@ -2,12 +2,11 @@
 
 ## Overview
 
-This document describes the authentication and authorization architecture for the DND Stats Sheet application. The system supports two auth strategies:
+This document describes the authentication and authorization architecture for the DND Stats Sheet application.
 
 | Strategy | Environment | Description |
 |----------|-------------|-------------|
-| `local_fake` | dev only | User picks from fake accounts via cookie-based selection |
-| `entra_external_id` | test/prod | Real login via Microsoft Entra External ID (OIDC/JWT) |
+| `entra_external_id` | dev/test/prod | Real login via Microsoft Entra External ID (OIDC/JWT) |
 
 **Key Design Goal**: Everything outside the auth module sees the same `UserPrincipal` regardless of which strategy is active.
 
@@ -26,10 +25,10 @@ from pydantic import BaseModel
 from typing import Literal
 
 class UserPrincipal(BaseModel):
-    subject: str              # Stable user ID (Entra `sub` claim / fake key in dev)
+    subject: str              # Stable user ID (Entra `sub` claim)
     username: str | None      # User-chosen username (None if not yet registered)
     roles: list[str]          # e.g., ["admin"], ["editor"], ["viewer"]
-    auth_scheme: Literal["local_fake", "entra_external_id"]
+    auth_scheme: Literal["entra_external_id"]
 ```
 
 **Design Decision**: No `email` or `display_name`. Users are identified by:
@@ -90,19 +89,16 @@ src/backend/src/
 │   ├── models.py                # UserPrincipal definition
 │   ├── dependencies.py          # get_current_user dependency
 │   ├── authorization.py         # require_role, has_role helpers
-│   ├── providers/
-│   │   ├── __init__.py
-│   │   ├── base.py              # AuthProvider protocol/interface
-│   │   ├── local_fake.py        # LocalFakeAuthProvider
-│   │   └── entra.py             # EntraAuthProvider
-│   └── dev_users.json           # Fake user data (dev only)
+│   └── providers/
+│       ├── __init__.py
+│       ├── base.py              # AuthProvider protocol/interface
+│       └── entra.py             # EntraAuthProvider
 ├── models/
 │   └── user.py                  # AppUser model (stored users)
 ├── storage/
 │   └── user.py                  # UserStorage interface + implementation
 ├── routes/
-│   ├── auth.py                  # /me, /register endpoints
-│   └── dev_auth.py              # /dev/* endpoints (dev only)
+│   └── auth.py                  # /me, /register endpoints
 ```
 
 ---
@@ -161,119 +157,15 @@ if (user.username === null) {
 
 ---
 
-## 4. Strategy A: `local_fake` (Dev Only)
+## 4. Authentication: `entra_external_id`
 
 ### 4.1 Purpose
-
-- Fast local development without external dependencies
-- No OIDC, no tokens
-- User "logs in" by selecting a fake account
-
-### 4.2 Fake User Data
-
-**File**: `src/backend/src/auth/dev_users.json`
-
-```json
-{
-  "admin": {
-    "subject": "dev-admin-001",
-    "username": "dev_admin",
-    "roles": ["admin", "editor", "viewer"]
-  },
-  "editor": {
-    "subject": "dev-editor-001",
-    "username": "dev_editor",
-    "roles": ["editor", "viewer"]
-  },
-  "viewer": {
-    "subject": "dev-viewer-001",
-    "username": "dev_viewer",
-    "roles": ["viewer"]
-  },
-  "new_user": {
-    "subject": "dev-new-001",
-    "username": null,
-    "roles": ["viewer"]
-  }
-}
-```
-
-Note: `new_user` has `username: null` to test the registration flow in dev.
-
-### 4.3 Dev-Only Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/dev/select-user` | POST | Sets `dev_user` cookie |
-| `/dev/logout` | POST | Clears `dev_user` cookie |
-| `/dev/users` | GET | Returns list of available fake users |
-
-**Request/Response**:
-
-```http
-POST /dev/select-user
-Content-Type: application/json
-
-{ "user_key": "admin" }
-```
-
-**Cookie Settings**:
-- Name: `dev_user`
-- Value: selected `user_key`
-- `HttpOnly=true`
-- `SameSite=Lax`
-- `Secure=false` (localhost)
-
-### 4.4 Request Authentication Flow
-
-```
-┌─────────────────┐     ┌──────────────────┐     ┌───────────────────┐
-│  Read Cookie    │────▶│  Lookup in       │────▶│  Build            │
-│  `dev_user`     │     │  dev_users.json  │     │  UserPrincipal    │
-└─────────────────┘     └──────────────────┘     └───────────────────┘
-        │                       │
-        ▼                       ▼
-   Missing: 401           Unknown: 401
-```
-
-### 4.5 Safety Guardrails (Non-Negotiable)
-
-On backend startup:
-
-```python
-if auth_mode == "local_fake" and env != "dev":
-    raise RuntimeError(
-        "FATAL: local_fake auth is only allowed in dev environment. "
-        f"Current ENV={env}. Refusing to start."
-    )
-```
-
-Optional additional check:
-```python
-if env == "dev" and host not in ("127.0.0.1", "localhost", "0.0.0.0"):
-    raise RuntimeError("Dev server must bind to localhost only")
-```
-
-### 4.6 Frontend Behavior (Dev)
-
-When `VITE_AUTH_MODE=local_fake`:
-
-1. Show "Dev User" selector dropdown in UI
-2. On selection change: `POST /dev/select-user` with `{ credentials: "include" }`
-3. Refresh `/me` to display current identity
-4. All API calls use `credentials: "include"` for cookie flow
-
----
-
-## 5. Strategy B: `entra_external_id` (Test/Prod)
-
-### 5.1 Purpose
 
 - Real signup/sign-in for arbitrary emails via Entra External ID user flows
 - Frontend obtains access token via MSAL
 - Backend validates JWT and maps claims to `UserPrincipal`
 
-### 5.2 Frontend Token Acquisition
+### 4.2 Frontend Token Acquisition
 
 Using MSAL.js:
 
@@ -299,7 +191,7 @@ fetch('/api/me', {
 });
 ```
 
-### 5.3 Backend JWT Validation
+### 4.3 Backend JWT Validation
 
 **Required Validations**:
 
@@ -315,7 +207,7 @@ fetch('/api/me', {
 - Cache JWKS (do not fetch per request)
 - Return **401 Unauthorized** for missing/invalid tokens
 
-### 5.4 Authentication + User Lookup Flow
+### 4.4 Authentication + User Lookup Flow
 
 ```python
 async def get_current_user(request: Request) -> UserPrincipal:
@@ -339,7 +231,7 @@ async def get_current_user(request: Request) -> UserPrincipal:
     )
 ```
 
-### 5.5 Configuration
+### 4.5 Configuration
 
 **Note**: Configuration is now stored in `config.py` (backend) and `service.config.ts` (frontend), not in environment variables. The settings below are defined per-environment in those files.
 
@@ -372,28 +264,24 @@ apiBaseUrl: 'https://api.example.com'
 
 ---
 
-## 6. Strategy Selection
+## 5. Strategy Selection
 
-### 6.1 Single Switch Point
+### 5.1 Single Switch Point
 
 Backend reads environment at startup:
 
 ```python
 # config/settings.py
 ENV: Literal["dev", "test", "prod"] = os.getenv("APP_ENV", "dev")
-AUTH_MODE: Literal["local_fake", "entra_external_id"] = os.getenv("AUTH_MODE", "local_fake")
+AUTH_MODE: Literal["entra_external_id"] = os.getenv("AUTH_MODE", "entra_external_id")
 ```
 
-### 6.2 Provider Factory
+### 5.2 Provider Factory
 
 ```python
 # builder.py
 def build_auth_provider() -> AuthProvider:
-    if settings.AUTH_MODE == "local_fake":
-        if settings.ENV != "dev":
-            raise RuntimeError("local_fake auth only allowed in dev")
-        return LocalFakeAuthProvider()
-    elif settings.AUTH_MODE == "entra_external_id":
+    if settings.AUTH_MODE == "entra_external_id":
         return EntraAuthProvider(
             issuer=settings.ENTRA_ISSUER,
             audience=settings.ENTRA_AUDIENCE,
@@ -403,28 +291,18 @@ def build_auth_provider() -> AuthProvider:
         raise ValueError(f"Unknown AUTH_MODE: {settings.AUTH_MODE}")
 ```
 
-### 6.3 No Mixed Mode
-
-**Never** support "sometimes fake, sometimes real" in the same environment:
-
-| Environment | Auth Mode |
-|-------------|-----------|
-| dev | `local_fake` |
-| test | `entra_external_id` |
-| prod | `entra_external_id` |
-
 ---
 
-## 7. API Endpoints
+## 6. API Endpoints
 
-### 7.1 Auth Endpoints
+### 6.1 Auth Endpoints
 
 | Endpoint | Auth Required | Description |
-|----------|---------------|-------------|
+|----------|---------------|--------------|
 | `GET /me` | Yes | Returns current `UserPrincipal` |
 | `POST /auth/register` | Yes | Register username (new users only) |
 
-### 7.2 Admin Endpoints
+### 6.2 Admin Endpoints
 
 | Endpoint | Auth Required | Role | Description |
 |----------|---------------|------|-------------|
@@ -432,31 +310,21 @@ def build_auth_provider() -> AuthProvider:
 | `POST /admin/ban` | Yes | admin | Ban a user by subject |
 | `POST /admin/unban` | Yes | admin | Unban a user by subject |
 
-### 7.3 Protected Endpoints
+### 6.3 Protected Endpoints
 
 | Endpoint | Auth Required | Description |
 |----------|---------------|-------------|
 | `GET /api/*` | Yes | All API routes |
 
-### 7.4 Public Endpoints
+### 6.4 Public Endpoints
 
 | Endpoint | Auth Required | Description |
 |----------|---------------|-------------|
 | `GET /health` | No | Health check |
 
-### 7.5 Dev-Only Endpoints
-
-| Endpoint | Condition | Description |
-|----------|-----------|-------------|
-| `POST /dev/select-user` | `ENV=dev` AND `AUTH_MODE=local_fake` | Select fake user |
-| `POST /dev/logout` | `ENV=dev` AND `AUTH_MODE=local_fake` | Clear session |
-| `GET /dev/users` | `ENV=dev` AND `AUTH_MODE=local_fake` | List fake users |
-
-**These endpoints must not be registered when not in dev mode.**
-
 ---
 
-## 8. Error Responses
+## 7. Error Responses
 
 | Status | Condition |
 |--------|-----------|
@@ -466,14 +334,13 @@ def build_auth_provider() -> AuthProvider:
 
 ---
 
-## 9. Implementation Checklist
+## 8. Implementation Checklist
 
 ### Backend
 
 - [ ] Create `UserPrincipal` model in `src/auth/models.py`
 - [ ] Create `AppUser` model in `src/models/user.py`
 - [ ] Create `AuthProvider` protocol in `src/auth/providers/base.py`
-- [ ] Implement `LocalFakeAuthProvider` in `src/auth/providers/local_fake.py`
 - [ ] Implement `EntraAuthProvider` in `src/auth/providers/entra.py`
 - [ ] Create `UserStorage` interface and implementation
 - [ ] Create `get_current_user` dependency in `src/auth/dependencies.py`
@@ -481,20 +348,15 @@ def build_auth_provider() -> AuthProvider:
 - [ ] Add `/me` endpoint in `src/routes/auth.py`
 - [ ] Add `/auth/register` endpoint
 - [ ] Add `/admin/*` endpoints for user management
-- [ ] Add `/dev/*` endpoints in `src/routes/dev_auth.py`
 - [ ] Add auth config to `src/config/`
 - [ ] Wire up in `builder.py`
-- [ ] Add startup guardrail check
-- [ ] Create `dev_users.json`
 
 ### Frontend
 
 - [ ] Add MSAL configuration for Entra auth
 - [ ] Create auth context/provider
-- [ ] Implement dev user selector component
 - [ ] Create username registration page
-- [ ] Configure `credentials: "include"` for dev mode
-- [ ] Add Bearer token header for Entra mode
+- [ ] Add Bearer token header for API calls
 - [ ] Create `/me` display component
 - [ ] Add registration redirect logic
 
@@ -504,27 +366,24 @@ def build_auth_provider() -> AuthProvider:
 - [ ] Unit tests for `AppUser` model
 - [ ] Unit tests for authorization helpers
 - [ ] Unit tests for username validation
-- [ ] Integration tests for dev auth flow
 - [ ] Integration tests for registration flow
 - [ ] Integration tests for JWT validation (mocked)
 - [ ] Integration tests for ban/unban
 
 ---
 
-## 10. Security Considerations
+## 9. Security Considerations
 
-1. **Dev auth cannot leak to prod**: Hard crash on startup if misconfigured
-2. **HttpOnly cookies**: Prevents XSS from reading dev session
-3. **JWT validation**: Full validation chain (signature, issuer, audience, expiry)
-4. **JWKS caching**: Prevents DoS via key fetching
-5. **Role-based access**: All authorization through `UserPrincipal.roles`
-6. **No token storage in frontend**: MSAL handles token lifecycle
-7. **Username validation**: Prevent reserved words, enforce format
-8. **Ban check on every request**: Banned users rejected immediately
+1. **JWT validation**: Full validation chain (signature, issuer, audience, expiry)
+2. **JWKS caching**: Prevents DoS via key fetching
+3. **Role-based access**: All authorization through `UserPrincipal.roles`
+4. **No token storage in frontend**: MSAL handles token lifecycle
+5. **Username validation**: Prevent reserved words, enforce format
+6. **Ban check on every request**: Banned users rejected immediately
 
 ---
 
-## 11. Future Considerations
+## 10. Future Considerations
 
 - Refresh token handling
 - Session management/revocation

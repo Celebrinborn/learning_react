@@ -10,7 +10,10 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
 
-  if (isLoading) {
+  // Only block render on initial load (user not yet known).
+  // Background MSAL activity (token refresh, ssoSilent) also sets isLoading=true
+  // but must not unmount children — that would reset stateful components like maps.
+  if (isLoading && !user) {
     return null;
   }
 
