@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blender-hex-heightmap-addon"
+version = "0.1.0"
+description = "Blender extension: batch-generate printable heightmapped hex tiles"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+
+    # Ruff (lint + import sorting + formatter)
+    "ruff>=0.4.0",
+    "pyright>=1.1.0",
+]
+
+[tool.setuptools]
+package-dir = {"hex_heightmap_generator" = "hex_heightmap_generator"}
+
+[tool.setuptools.packages.find]
+include = ["hex_heightmap_generator*"]
+namespaces = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+# Integration tests require bpy and run via the Blender background harness
+# (scripts/run_integration.py), not plain pytest.
+testpaths = ["tests/unit"]
+
+# -------------------------
+# Ruff configuration
+# -------------------------
+
+[tool.ruff]
+# Match Black's default line length
+line-length = 88
+# Target your minimum Python version
+target-version = "py311"
+# Ruff will ignore files in .gitignore by default; this just makes it explicit if you want later
+respect-gitignore = true
+
+[tool.ruff.lint]
+# E,F: baseline correctness (pycodestyle + pyflakes)
+# I: import sorting (isort)
+select = ["E", "F", "I"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-sort-within-sections = true
+
+[tool.ruff.lint.per-file-ignores]
+# bpy is only available inside Blender; ignore import resolution for bpy modules
+"hex_heightmap_generator/*.py" = ["E402"]

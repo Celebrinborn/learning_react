@@ -1,0 +1,8 @@
+{
+  "include": ["hex_heightmap_generator", "tests", "scripts"],
+  "extraPaths": ["."],
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "strict",
+  "venvPath": ".",
+  "venv": "env"
+}

@@ -1,0 +1,10 @@
+schema_version = "1.0.0"
+id = "hex_heightmap_generator"
+version = "0.1.0"
+name = "Hex Heightmap Generator"
+tagline = "Batch-generate printable heightmapped hex tiles"
+maintainer = "Celebrinborn"
+type = "add-on"
+blender_version_min = "5.0.0"
+license = ["SPDX:GPL-3.0-or-later"]
+copyright = ["2026 Celebrinborn"]

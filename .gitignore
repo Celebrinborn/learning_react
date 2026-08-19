@@ -35,6 +35,10 @@ build
 coverage
 .nyc_output
 
+# Blender add-on (src/blender_addon)
+src/blender_addon/env/
+src/blender_addon/dist/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
