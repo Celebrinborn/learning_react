@@ -28,10 +28,18 @@ def _import_bpy_modules() -> list[Any]:
         operators_hello,
         operators_setup,
         properties,
+        ui,
     )
 
     # properties first: the generate operator reads scene.hg_settings.
-    return [properties, operators_hello, operators_setup, operators_generate]
+    # ui last: the panel binds to operators and settings.
+    return [
+        properties,
+        operators_hello,
+        operators_setup,
+        operators_generate,
+        ui,
+    ]
 
 
 def register() -> None:
