@@ -105,8 +105,7 @@ def parse_cube_coords(text: str) -> tuple[list[CubeCoord], list[Issue]]:
                 Issue(
                     "error",
                     "NONZERO_SUM",
-                    f"Line {line_no}: q+r+s must be 0, got "
-                    f"{q}+{r}+{s}={q + r + s}",
+                    f"Line {line_no}: q+r+s must be 0, got {q}+{r}+{s}={q + r + s}",
                     line_no,
                 )
             )

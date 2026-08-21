@@ -89,9 +89,7 @@ def test_generate_tile_deforms_terrain_follows_gradient() -> None:
     for v in tile.data.vertices:
         if v.co.z >= -1e-6:  # was a top (terrain) vertex
             u: float = fx.MAPPING_ORIGIN_X + v.co.x * fx.PIXELS_PER_UNIT
-            expected_z: float = (
-                u / (fx.GRADIENT_WIDTH - 1)
-            ) * fx.ELEVATION_RANGE_MM
+            expected_z: float = (u / (fx.GRADIENT_WIDTH - 1)) * fx.ELEVATION_RANGE_MM
             assert abs(v.co.z - expected_z) < 0.05, (
                 f"terrain vertex {v.index}: z={v.co.z:.4f} expected {expected_z:.4f}"
             )
@@ -107,11 +105,23 @@ def test_two_tiles_do_not_share_datablock() -> None:
     bpy.context.scene.collection.children.link(collection)
 
     t1 = generate_tile(
-        template, collection, CubeCoord(0, 0, 0), hm, _mapping(),
-        fx.TERRAIN_BASE_Z, fx.ELEVATION_OFFSET_MM, fx.ELEVATION_RANGE_MM,
+        template,
+        collection,
+        CubeCoord(0, 0, 0),
+        hm,
+        _mapping(),
+        fx.TERRAIN_BASE_Z,
+        fx.ELEVATION_OFFSET_MM,
+        fx.ELEVATION_RANGE_MM,
     )
     t2 = generate_tile(
-        template, collection, CubeCoord(1, -1, 0), hm, _mapping(),
-        fx.TERRAIN_BASE_Z, fx.ELEVATION_OFFSET_MM, fx.ELEVATION_RANGE_MM,
+        template,
+        collection,
+        CubeCoord(1, -1, 0),
+        hm,
+        _mapping(),
+        fx.TERRAIN_BASE_Z,
+        fx.ELEVATION_OFFSET_MM,
+        fx.ELEVATION_RANGE_MM,
     )
     assert t1.data is not t2.data, "two tiles share a mesh datablock"

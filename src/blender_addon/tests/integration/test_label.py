@@ -45,8 +45,14 @@ def _make_tile() -> tuple[bpy.types.Object, bpy.types.Object]:
     collection: bpy.types.Collection = bpy.data.collections.new("HG_GENERATED")
     bpy.context.scene.collection.children.link(collection)
     tile = generate_tile(
-        template, collection, CubeCoord(1, 0, -1), hm, _mapping(),
-        fx.TERRAIN_BASE_Z, fx.ELEVATION_OFFSET_MM, fx.ELEVATION_RANGE_MM,
+        template,
+        collection,
+        CubeCoord(1, 0, -1),
+        hm,
+        _mapping(),
+        fx.TERRAIN_BASE_Z,
+        fx.ELEVATION_OFFSET_MM,
+        fx.ELEVATION_RANGE_MM,
     )
     return template, tile
 

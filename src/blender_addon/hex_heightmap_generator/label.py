@@ -43,9 +43,7 @@ def engrave_label(
     by the anchor's local transform applied through the tile's world
     transform, then Boolean-differenced. Returns a structured result.
     """
-    curve: bpy.types.FontCurve = bpy.data.curves.new(
-        name="HG_LABEL", type="FONT"
-    )
+    curve: bpy.types.FontCurve = bpy.data.curves.new(name="HG_LABEL", type="FONT")
     curve.body = label_string(coord)
     curve.size = size_mm
     curve.align_x = "CENTER"
@@ -67,9 +65,7 @@ def engrave_label(
     bpy.data.objects.remove(cutter, do_unlink=True)
     bpy.data.curves.remove(old_curve)
 
-    cutter_mesh: bpy.types.Object = bpy.data.objects.new(
-        "HG_LABEL_CUTTER", mesh
-    )
+    cutter_mesh: bpy.types.Object = bpy.data.objects.new("HG_LABEL_CUTTER", mesh)
     bpy.context.scene.collection.objects.link(cutter_mesh)
     cutter_mesh.matrix_world = tile.matrix_world @ anchor.matrix_local
 

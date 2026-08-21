@@ -35,9 +35,7 @@ class BooleanResult:
 
 def _terrain_vertex_indices(obj: bpy.types.Object) -> set[int]:
     """Return the set of vertex indices in the terrain-surface group."""
-    group: bpy.types.VertexGroup | None = obj.vertex_groups.get(
-        GROUP_TERRAIN_SURFACE
-    )
+    group: bpy.types.VertexGroup | None = obj.vertex_groups.get(GROUP_TERRAIN_SURFACE)
     if group is None:
         return set()
     indices: set[int] = set()
@@ -82,9 +80,7 @@ def generate_tile(
     collection.objects.link(tile_obj)
 
     terrain_indices: set[int] = _terrain_vertex_indices(tile_obj)
-    center_x, center_y = cube_to_plane(
-        coord, mapping.orientation, mapping.hex_radius
-    )
+    center_x, center_y = cube_to_plane(coord, mapping.orientation, mapping.hex_radius)
 
     mesh: bpy.types.Mesh = tile_obj.data
     for vertex in mesh.vertices:

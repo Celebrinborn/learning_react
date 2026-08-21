@@ -20,7 +20,7 @@ from hex_heightmap_generator.coordinates import (
 from hex_heightmap_generator.naming import label_string, tile_object_name
 from hex_heightmap_generator.sampling import is_in_bounds
 
-_SQRT3: float = 3.0 ** 0.5
+_SQRT3: float = 3.0**0.5
 
 
 @dataclass(frozen=True)

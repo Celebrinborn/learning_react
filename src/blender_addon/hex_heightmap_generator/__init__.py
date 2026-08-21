@@ -24,11 +24,14 @@ def _import_bpy_modules() -> list[Any]:
     ``hex_heightmap_generator.coordinates``) never pulls in bpy.
     """
     from hex_heightmap_generator import (  # noqa: PLC0415
+        operators_generate,
         operators_hello,
         operators_setup,
+        properties,
     )
 
-    return [operators_hello, operators_setup]
+    # properties first: the generate operator reads scene.hg_settings.
+    return [properties, operators_hello, operators_setup, operators_generate]
 
 
 def register() -> None:

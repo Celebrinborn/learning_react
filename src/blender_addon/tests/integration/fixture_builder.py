@@ -78,9 +78,7 @@ def build_template(name: str = "HG_TEMPLATE") -> bpy.types.Object:
     for k in range(6):
         k1: int = (k + 1) % 6
         bm.faces.new((top_center, top_inner[k], top_inner[k1]))
-        bm.faces.new(
-            (top_inner[k], top_inner[k1], top_outer[k1], top_outer[k])
-        )
+        bm.faces.new((top_inner[k], top_inner[k1], top_outer[k1], top_outer[k]))
     # Bottom: fan.
     for k in range(6):
         k1: int = (k + 1) % 6
@@ -88,9 +86,7 @@ def build_template(name: str = "HG_TEMPLATE") -> bpy.types.Object:
     # Sides: quads.
     for k in range(6):
         k1: int = (k + 1) % 6
-        bm.faces.new(
-            (top_outer[k], top_outer[k1], bottom_outer[k1], bottom_outer[k])
-        )
+        bm.faces.new((top_outer[k], top_outer[k1], bottom_outer[k1], bottom_outer[k]))
 
     bm.normal_update()
     mesh: bpy.types.Mesh = bpy.data.meshes.new(name)

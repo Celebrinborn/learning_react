@@ -56,19 +56,14 @@ def load_heightmap(path: str) -> Heightmap:
     pixels: list[float] = list(image.pixels)
     expected: int = width * height * 4
     if len(pixels) != expected:
-        raise HeightmapError(
-            f"pixel buffer size {len(pixels)} != expected {expected}"
-        )
+        raise HeightmapError(f"pixel buffer size {len(pixels)} != expected {expected}")
 
     grid: list[float] = [0.0] * (width * height)
     for i in range(width * height):
         r: float = pixels[i * 4]
         g: float = pixels[i * 4 + 1]
         b: float = pixels[i * 4 + 2]
-        if (
-            abs(r - g) > GRAYSCALE_TOLERANCE
-            or abs(r - b) > GRAYSCALE_TOLERANCE
-        ):
+        if abs(r - g) > GRAYSCALE_TOLERANCE or abs(r - b) > GRAYSCALE_TOLERANCE:
             raise HeightmapError(
                 f"pixel ({i % width}, {i // width}) is not grayscale "
                 f"(R={r:.4f}, G={g:.4f}, B={b:.4f})"

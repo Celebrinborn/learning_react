@@ -35,7 +35,7 @@ def test_manifest_declares_blender_5_min() -> None:
     assert manifest_path.is_file(), f"manifest missing: {manifest_path}"
     text: str = manifest_path.read_text(encoding="utf-8")
     assert 'blender_version_min = "5.0.0"' in text, (
-        "manifest must declare blender_version_min = \"5.0.0\""
+        'manifest must declare blender_version_min = "5.0.0"'
     )
 
 
