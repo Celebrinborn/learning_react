@@ -23,9 +23,12 @@ def _import_bpy_modules() -> list[Any]:
     Imported lazily so that importing a pure submodule (e.g.
     ``hex_heightmap_generator.coordinates``) never pulls in bpy.
     """
-    from hex_heightmap_generator import operators_hello  # noqa: PLC0415
+    from hex_heightmap_generator import (  # noqa: PLC0415
+        operators_hello,
+        operators_setup,
+    )
 
-    return [operators_hello]
+    return [operators_hello, operators_setup]
 
 
 def register() -> None:
