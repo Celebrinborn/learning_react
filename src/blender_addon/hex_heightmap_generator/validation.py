@@ -10,15 +10,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from hex_heightmap_generator.coordinates import (
+from .coordinates import (
     CubeCoord,
     HexOrientation,
     Issue,
     cube_to_plane,
     parse_cube_coords,
 )
-from hex_heightmap_generator.naming import label_string, tile_object_name
-from hex_heightmap_generator.sampling import is_in_bounds
+from .naming import label_string, tile_object_name
+from .sampling import is_in_bounds
 
 _SQRT3: float = 3.0**0.5
 

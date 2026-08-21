@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import bpy
 
-from hex_heightmap_generator.coordinates import CubeCoord
-from hex_heightmap_generator.mesh_ops import BooleanResult, apply_boolean
-from hex_heightmap_generator.naming import ROLE_LABEL_ANCHOR, label_string
+from .coordinates import CubeCoord
+from .mesh_ops import BooleanResult, apply_boolean
+from .naming import ROLE_LABEL_ANCHOR, label_string
 
 # Safety margin so the cutter penetrates beyond the target face (§9.1).
 _CUT_MARGIN: float = 0.05

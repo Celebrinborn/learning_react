@@ -8,7 +8,7 @@ integers, e.g. ``2,-1,-1``.
 
 from __future__ import annotations
 
-from hex_heightmap_generator.coordinates import CubeCoord
+from .coordinates import CubeCoord
 
 # Scene-contract constants (design doc §5).
 GROUP_TERRAIN_SURFACE: str = "HG_TERRAIN_SURFACE"

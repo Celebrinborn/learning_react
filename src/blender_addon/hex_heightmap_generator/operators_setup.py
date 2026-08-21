@@ -11,7 +11,7 @@ from __future__ import annotations
 import bpy
 from bpy.types import Operator as OperatorType
 
-from hex_heightmap_generator.naming import (
+from .naming import (
     GROUP_TERRAIN_SURFACE,
     ROLE_LABEL_ANCHOR,
     ROLE_TEMPLATE,

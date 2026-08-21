@@ -10,6 +10,11 @@ This package init is a lazy registration shim: it does NOT import bpy at
 module level, so the pure core modules (coordinates, sampling, naming,
 validation) can be imported and unit-tested with normal Python outside
 Blender. bpy-dependent modules are imported only inside register().
+
+The package uses RELATIVE imports throughout: Blender loads extensions as a
+nested package (bl_ext.user_default.<id>), so absolute self-imports of the
+form ``from hex_heightmap_generator.X import ...`` would fail with
+``No module named 'hex_heightmap_generator'``.
 """
 
 from __future__ import annotations
@@ -23,7 +28,7 @@ def _import_bpy_modules() -> list[Any]:
     Imported lazily so that importing a pure submodule (e.g.
     ``hex_heightmap_generator.coordinates``) never pulls in bpy.
     """
-    from hex_heightmap_generator import (  # noqa: PLC0415
+    from . import (  # noqa: PLC0415
         operators_generate,
         operators_hello,
         operators_setup,

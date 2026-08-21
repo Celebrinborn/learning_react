@@ -16,21 +16,21 @@ from typing import Literal
 import bpy
 from bpy.types import Operator as OperatorType
 
-from hex_heightmap_generator.coordinates import (
+from .coordinates import (
     CubeCoord,
     HexOrientation,
     Issue,
     parse_cube_coords,
 )
-from hex_heightmap_generator.heightmap import Heightmap, HeightmapError, load_heightmap
-from hex_heightmap_generator.label import engrave_label, find_label_anchor
-from hex_heightmap_generator.mesh_ops import generate_tile
-from hex_heightmap_generator.naming import (
+from .heightmap import Heightmap, HeightmapError, load_heightmap
+from .label import engrave_label, find_label_anchor
+from .mesh_ops import generate_tile
+from .naming import (
     COLLECTION_GENERATED,
     ROLE_GENERATED_TILE,
     tile_object_name,
 )
-from hex_heightmap_generator.validation import MappingParams, validate_batch
+from .validation import MappingParams, validate_batch
 
 RasterYDirection = Literal["DOWN", "UP"]
 

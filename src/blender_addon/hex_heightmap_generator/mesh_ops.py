@@ -15,11 +15,11 @@ from typing import Literal
 import bmesh
 import bpy
 
-from hex_heightmap_generator.coordinates import CubeCoord, cube_to_plane
-from hex_heightmap_generator.heightmap import Heightmap
-from hex_heightmap_generator.naming import GROUP_TERRAIN_SURFACE, tile_object_name
-from hex_heightmap_generator.sampling import bilinear_sample, normalized_to_elevation
-from hex_heightmap_generator.validation import MappingParams, plane_to_pixel
+from .coordinates import CubeCoord, cube_to_plane
+from .heightmap import Heightmap
+from .naming import GROUP_TERRAIN_SURFACE, tile_object_name
+from .sampling import bilinear_sample, normalized_to_elevation
+from .validation import MappingParams, plane_to_pixel
 
 BooleanOperation = Literal["DIFFERENCE", "UNION"]
 BooleanSolver = Literal["EXACT", "FLOAT"]

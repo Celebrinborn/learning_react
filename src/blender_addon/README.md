@@ -155,6 +155,17 @@ src/blender_addon/
    `sampling.py` so it can be unit-tested with normal Python; `heightmap.py`
    handles the `bpy`-dependent raster load and grayscale verification.
 
+## Important: relative imports only
+
+Blender loads an installed extension as a **nested package**
+(`bl_ext.user_default.<extension_id>`), not as a top-level module. Therefore
+every import *within* the package **must be relative**
+(`from .naming import ...`). An absolute self-import
+(`from hex_heightmap_generator.naming import ...`) fails at enable time with
+`No module named 'hex_heightmap_generator'`. This is verified by
+`scripts/verify_bl_ext_load.py`, which imports the package under a nested
+namespace and calls `register()` — the exact condition Blender performs.
+
 ## Design reference
 
 See [`docs/blender_hex_heightmap_addon_design.md`](../../docs/blender_hex_heightmap_addon_design.md)
